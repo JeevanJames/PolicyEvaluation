@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Jeevan.PolicyEvaluation</name>
+    </assembly>
+    <members>
+        <member name="T:Jeevan.PolicyEvaluation.Expression">
+            <summary>
+                A special token that contains a sequence of other tokens, forming a full expression.
+                <br/>
+                The reason why this class derives from <see cref="T:Jeevan.PolicyEvaluation.Token"/> and is not outside the hierarchy
+                is because one of the tokens it can contain is a nested expression.
+            </summary>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,System.Func{System.String,System.Boolean})">
+            <summary>
+                Resolves the value of a policy, given its corresponding token. Only the following token
+                types are supported:
+                <br/>o <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/>: A policy that has not yet been evaluated.
+                <br/>o <see cref="T:Jeevan.PolicyEvaluation.Expression"/>: A nested expression.
+                <br/>o <see cref="T:Jeevan.PolicyEvaluation.ResultToken"/>: A policy whose result has already been evaluated.
+                <para/>
+                In case of a <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken" />, the method will look for other policy name
+                tokens with the same name in the expression and nested expressions and replace them with
+                the result of this policy evaluation. This way, the specific policy is only evaluated once.
+            </summary>
+            <param name="index">The index of the token in the <see cref="P:Jeevan.PolicyEvaluation.Expression.Tokens"/> collection.</param>
+            <param name="evaluator">The policy evaluation function.</param>
+            <returns>The result of the expression evaluation.</returns>
+            <exception cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.Expression.AssignResultForPolicyName(System.String,System.Boolean,System.Int32)">
+            <summary>
+                For all <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/> tokens in this expression, replace with a <see cref="T:Jeevan.PolicyEvaluation.ResultToken"/>
+                containing the specified <paramref name="result"/>.
+            </summary>
+        </member>
+        <member name="T:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException">
+            <summary>
+                Exception thrown when an expression is invalid due to syntax errors.
+            </summary>
+        </member>
+        <member name="P:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException.Position">
+            <summary>
+                Gets the index of the syntax error in the expression.
+            </summary>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <inheritdoc />
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.String)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with a specified
+                error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.String,System.Exception)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with a specified
+                error message and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="innerException">The exception that is the cause of the current exception.</param>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with serialized
+                data.
+            </summary>
+            <param name="info">
+                The SerializationInfo that holds the serialized object data about the exception being thrown.
+            </param>
+            <param name="context">
+                The StreamingContext that contains contextual information about the source or destination.
+            </param>
+        </member>
+        <member name="T:Jeevan.PolicyEvaluation.PositionalToken">
+            <summary>
+                Any token that is created from parsing the initial expression string. Such tokens will have
+                information about their position in the expression string, which will be used when throwing
+                exceptions from the parsing, making it useful for debugging.
+            </summary>
+            <param name="Position">The zero-based index at which this token appears in the expression string.</param>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.PositionalToken.#ctor(System.Int32)">
+            <summary>
+                Any token that is created from parsing the initial expression string. Such tokens will have
+                information about their position in the expression string, which will be used when throwing
+                exceptions from the parsing, making it useful for debugging.
+            </summary>
+            <param name="Position">The zero-based index at which this token appears in the expression string.</param>
+        </member>
+        <member name="P:Jeevan.PolicyEvaluation.PositionalToken.Position">
+            <summary>The zero-based index at which this token appears in the expression string.</summary>
+        </member>
+        <member name="T:Jeevan.PolicyEvaluation.ResultToken">
+            <summary>
+                A special token that holds the result of evaluating a policy from a <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/>
+                token.
+            </summary>
+            <param name="Result">The result of the policy evaluation.</param>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.ResultToken.#ctor(System.Boolean)">
+            <summary>
+                A special token that holds the result of evaluating a policy from a <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/>
+                token.
+            </summary>
+            <param name="Result">The result of the policy evaluation.</param>
+        </member>
+        <member name="P:Jeevan.PolicyEvaluation.ResultToken.Result">
+            <summary>The result of the policy evaluation.</summary>
+        </member>
+    </members>
+</doc>

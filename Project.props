@@ -1,0 +1,10 @@
+<Project>
+
+    <PropertyGroup>
+        <BaseNamespace>Jeevan.PolicyEvaluation</BaseNamespace>
+        <Product>Jeevan.PolicyEvaluation</Product>
+        <RepositoryName>PolicyEvaluation</RepositoryName>
+        <CopyrightYears>2023</CopyrightYears>
+    </PropertyGroup>
+
+</Project>

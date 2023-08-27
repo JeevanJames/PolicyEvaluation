@@ -1,0 +1,45 @@
+<Project>
+
+    <Import Project="Project.props" />
+
+    <PropertyGroup Label="Build">
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors />
+        <NoWarn>1701;1702;1591;NU5104;NU5105</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Package">
+        <Authors>Jeevan James</Authors>
+        <Company>Jeevan James</Company>
+        <Product>Jeevan.PolicyEvaluation</Product>
+        <Copyright>Copyright (c) $(CopyrightYears) Jeevan James</Copyright>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/JeevanJames/PolicyEvaluation</PackageProjectUrl>
+        <PackageIcon>Icon.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/JeevanJames/PolicyEvaluation.git</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <PackageTags>PolicyEvaluation</PackageTags>
+        <NeutralLanguage>en-US</NeutralLanguage>
+    </PropertyGroup>
+
+    <PropertyGroup Label="Rules">
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)shared/PolicyEvaluation.ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="$(MSBuildThisFileDirectory)shared/stylecop.json" Link="Properties/stylecop.json" />
+    </ItemGroup>
+
+    <ItemGroup Label="Analyzer Package References">
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3" PrivateAssets="all"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="4.4.0" PrivateAssets="all"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="9.8.0.76515" PrivateAssets="all"/>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.507" PrivateAssets="all"/>
+    </ItemGroup>
+
+</Project>
