@@ -1,14 +1,19 @@
-﻿using System.Text.RegularExpressions;
+﻿namespace Jeevan.PolicyEvaluation;
 
-namespace Jeevan.PolicyEvaluation;
-
-public static partial class PolicyEvaluator
+public sealed class PolicyEvaluator
 {
-    public static bool EvaluateExpression(string expression, Func<string, bool> evaluator)
+    public PolicyEvaluator(Func<string, bool> evaluator)
+    {
+        Evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
+    }
+
+    public Func<string, bool> Evaluator { get; set; }
+
+    public bool EvaluateExpression(string expression)
     {
         PositionalToken[] tokens = Tokenize(expression).ToArray();
         Expression expr = CreateExpression(tokens);
-        return expr.Evaluate(evaluator);
+        return expr.Evaluate(Evaluator);
     }
 
     private static Expression CreateExpression(PositionalToken[] tokens)
@@ -84,7 +89,7 @@ public static partial class PolicyEvaluator
                         endIndex++;
                     }
 
-                    string identifier = expression.Substring(position, endIndex - position);
+                    string identifier = expression[position..endIndex];
 
                     switch (identifier)
                     {
@@ -147,4 +152,12 @@ public static partial class PolicyEvaluator
 
         return true;
     }
+}
+
+public enum PolicyOutcome
+{
+    Pass,
+    Fail,
+    Indeterminate,
+    InvalidPolicyName,
 }

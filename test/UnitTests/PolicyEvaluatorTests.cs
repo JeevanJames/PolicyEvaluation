@@ -2,12 +2,17 @@
 
 public sealed class PolicyEvaluatorTests
 {
+    private readonly PolicyEvaluator _evaluator;
     private readonly ITestOutputHelper _output;
 
     public PolicyEvaluatorTests(ITestOutputHelper output)
     {
+        _evaluator = new PolicyEvaluator(TestPolicyEvaluator);
         _output = output;
     }
+
+    private static bool TestPolicyEvaluator(string policyName) =>
+        policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase);
 
     [Theory]
     [InlineData("True1", true)]
@@ -17,7 +22,7 @@ public sealed class PolicyEvaluatorTests
     public void SimpleExpressionTests(string expression, bool expectedResult)
     {
         _output.WriteLine(expression);
-        bool result = PolicyEvaluator.EvaluateExpression(expression, TestPolicyEvaluator);
+        bool result = _evaluator.EvaluateExpression(expression);
         result.ShouldBe(expectedResult);
     }
 
@@ -63,12 +68,9 @@ public sealed class PolicyEvaluatorTests
     public void ComplexExpressionTests(int index, string expression, bool expectedResult)
     {
         _output.WriteLine($"{index} {expression}");
-        bool result = PolicyEvaluator.EvaluateExpression(expression, TestPolicyEvaluator);
+        bool result = _evaluator.EvaluateExpression(expression);
         result.ShouldBe(expectedResult);
     }
-
-    private static bool TestPolicyEvaluator(string policyName) =>
-        policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase);
 
     [Theory]
     [InlineData("True1 AND& False2 OR True3")]
@@ -83,11 +85,14 @@ public sealed class PolicyEvaluatorTests
     [InlineData("False1 OR OR True2 AND False3")]
     [InlineData("True1 AND False2 OR True3)")]
     [InlineData("AND True1 OR False2")]
+    [InlineData("True1 AND (False2 OR (True3 AND False4))")]
+    [InlineData("(True1 AND)")]
+    [InlineData("True1 AND False2 True3")]
     public void ExpressionSyntaxErrorExceptionTests(string expression)
     {
         _output.WriteLine(expression);
         ExpressionSyntaxErrorException exception = Should.Throw<ExpressionSyntaxErrorException>(
-            () => PolicyEvaluator.EvaluateExpression(expression, _ => true));
+            () => _evaluator.EvaluateExpression(expression));
 
         _output.WriteLine(new string(' ', exception.Position) + '^');
         _output.WriteLine(exception.Message);
