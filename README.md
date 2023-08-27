@@ -6,9 +6,9 @@
 
 [![GitHub Actions Build History](https://buildstats.info/github/chart/JeevanJames/PolicyEvaluation?branch=main&includeBuildsFromPullRequest=false)](https://github.com/JeevanJames/PolicyEvaluation/actions)
 
-PolicyEvaluator is a small library for parsing logical expressions containing policy names, to evaluate if the expression passes or fails. The policy evaluation itself is provided externally (through a lambda); the main job of this library is to evaluate the policies in the context of a logical expression.
+PolicyEvaluation is a small library for parsing logical expressions containing policy names, to evaluate if the expression passes or fails. The policy evaluation itself is provided externally (through a delegate); the main job of this library is to evaluate the policies in the context of a logical expression.
 
-A few sample expressions:
+A few sample expressions (where `Policy1`, `Policy2`, `Policy3` and `Policy4` are policy names):
 * `Policy1 AND Policy2`
 * `Policy1 OR Policy2`
 * `Policy1 AND (Policy2 OR Policy3)`
@@ -37,6 +37,8 @@ dotnet add <project> package Jeevan.PolicyEvaluation
 ```
 
 ## Usage
+
+Include the namespace `Jeevan.PolicyEvaluation` and use the static `PolicyEvaluator.EvaluateExpression` method to perform the expression evaluation. This method accepts a delegate that will evaluate the policies based on their name.
 
 ```cs
 string expression = "Policy1 AND (Policy2 OR Policy3)";
