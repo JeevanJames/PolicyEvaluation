@@ -44,6 +44,7 @@ jobs:
         run: |
           echo ${{github.ref}}
           echo ${{github.ref_type}}
+          echo ${{github.ref_name}}
 
   publish:
     name: "Publish NuGet package"
@@ -51,5 +52,8 @@ jobs:
     needs: build
     if: github.ref_type == 'tag'
     steps:
-      - name: "Display details"
-        run: echo "Publishing ${{github.ref}} to NuGet.org"
+      - name: "Publish NuGet package"
+        run: |
+          echo Test
+          # dotnet pack ./src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=${{github.tag_name}}
+
