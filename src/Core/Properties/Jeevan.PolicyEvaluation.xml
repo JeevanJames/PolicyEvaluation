@@ -12,7 +12,7 @@
                 is because one of the tokens it can contain is a nested expression.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,System.Func{System.String,System.Boolean})">
+        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,System.Func{System.String,Jeevan.PolicyEvaluation.PolicyOutcome})">
             <summary>
                 Resolves the value of a policy, given its corresponding token. Only the following token
                 types are supported:
@@ -29,10 +29,10 @@
             <returns>The result of the expression evaluation.</returns>
             <exception cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.Expression.AssignResultForPolicyName(System.String,System.Boolean,System.Int32)">
+        <member name="M:Jeevan.PolicyEvaluation.Expression.AssignOutcomeForPolicy(System.String,Jeevan.PolicyEvaluation.PolicyOutcome,System.Int32)">
             <summary>
                 For all <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/> tokens in this expression, replace with a <see cref="T:Jeevan.PolicyEvaluation.ResultToken"/>
-                containing the specified <paramref name="result"/>.
+                containing the specified <paramref name="outcome"/>.
             </summary>
         </member>
         <member name="T:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException">
@@ -75,6 +75,11 @@
                 The StreamingContext that contains contextual information about the source or destination.
             </param>
         </member>
+        <member name="P:Jeevan.PolicyEvaluation.PolicyEvaluatorOptions.Logger">
+            <summary>
+                Gets or sets a delegate to log diagnostic details of policy evaluation.
+            </summary>
+        </member>
         <member name="T:Jeevan.PolicyEvaluation.PositionalToken">
             <summary>
                 Any token that is created from parsing the initial expression string. Such tokens will have
@@ -99,16 +104,16 @@
                 A special token that holds the result of evaluating a policy from a <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/>
                 token.
             </summary>
-            <param name="Result">The result of the policy evaluation.</param>
+            <param name="Outcome">The result of the policy evaluation.</param>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.ResultToken.#ctor(System.Boolean)">
+        <member name="M:Jeevan.PolicyEvaluation.ResultToken.#ctor(Jeevan.PolicyEvaluation.PolicyOutcome)">
             <summary>
                 A special token that holds the result of evaluating a policy from a <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/>
                 token.
             </summary>
-            <param name="Result">The result of the policy evaluation.</param>
+            <param name="Outcome">The result of the policy evaluation.</param>
         </member>
-        <member name="P:Jeevan.PolicyEvaluation.ResultToken.Result">
+        <member name="P:Jeevan.PolicyEvaluation.ResultToken.Outcome">
             <summary>The result of the policy evaluation.</summary>
         </member>
     </members>

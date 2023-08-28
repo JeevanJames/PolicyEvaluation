@@ -2,21 +2,29 @@
 
 public sealed class PolicyEvaluator
 {
-    public PolicyEvaluator(Func<string, bool> evaluator)
+    private readonly PolicyEvaluatorOptions _options;
+
+    public PolicyEvaluator(Func<string, PolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
     {
+        _options = options ?? PolicyEvaluatorOptions.Default;
         Evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
     }
 
-    public Func<string, bool> Evaluator { get; set; }
+    public Func<string, PolicyOutcome> Evaluator { get; set; }
 
     public bool EvaluateExpression(string expression)
     {
         PositionalToken[] tokens = Tokenize(expression).ToArray();
         Expression expr = CreateExpression(tokens);
-        return expr.Evaluate(Evaluator);
+        return expr.Evaluate(Evaluator) switch
+        {
+            PolicyOutcome.Pass or PolicyOutcome.NotApplicable => true, //TODO:
+            PolicyOutcome.Fail => false,
+            _ => throw new PolicyEvaluatorException("Invalid policy outcome."),
+        };
     }
 
-    private static Expression CreateExpression(PositionalToken[] tokens)
+    private Expression CreateExpression(PositionalToken[] tokens)
     {
         List<Token> outerTokens = new(tokens.Length);
         List<Token> nestedTokens = new();
@@ -30,7 +38,7 @@ public sealed class PolicyEvaluator
                     continue;
                 case CloseParenthesisToken:
                     nested = false;
-                    outerTokens.Add(new Expression(nestedTokens.ToList()));
+                    outerTokens.Add(new Expression(nestedTokens.ToList(), _options));
                     nestedTokens.Clear();
                     continue;
             }
@@ -41,7 +49,7 @@ public sealed class PolicyEvaluator
                 outerTokens.Add(token);
         }
 
-        return new Expression(outerTokens);
+        return new Expression(outerTokens, _options);
     }
 
     private static IEnumerable<PositionalToken> Tokenize(string expression)
@@ -158,6 +166,6 @@ public enum PolicyOutcome
 {
     Pass,
     Fail,
-    Indeterminate,
+    NotApplicable,
     InvalidPolicyName,
 }

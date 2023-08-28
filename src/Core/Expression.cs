@@ -1,4 +1,6 @@
-﻿namespace Jeevan.PolicyEvaluation;
+﻿using System.Diagnostics;
+
+namespace Jeevan.PolicyEvaluation;
 
 /// <summary>
 ///     A special token that contains a sequence of other tokens, forming a full expression.
@@ -8,14 +10,17 @@
 /// </summary>
 internal sealed record Expression : Token
 {
-    internal Expression(IList<Token> tokens)
+    private readonly PolicyEvaluatorOptions _options;
+
+    internal Expression(IList<Token> tokens, PolicyEvaluatorOptions options)
     {
         Tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+        _options = options;
     }
 
     internal IList<Token> Tokens { get; }
 
-    internal bool Evaluate(Func<string, bool> evaluator)
+    internal PolicyOutcome Evaluate(Func<string, PolicyOutcome> evaluator)
     {
         // Special case: If there is only a single token, evaluate that token directly.
 #pragma warning disable SA1011 // Closing square brackets should be spaced correctly
@@ -23,6 +28,7 @@ internal sealed record Expression : Token
         {
             case [PolicyNameToken pnToken]:
                 return evaluator(pnToken.Name);
+
             case [Expression expr]:
                 return expr.Evaluate(evaluator);
         }
@@ -39,16 +45,17 @@ internal sealed record Expression : Token
             if (Tokens[index] is not AndToken)
                 continue;
 
-            bool firstTokenResult = EvaluateToken(index - 1, evaluator);
-            bool secondTokenResult = EvaluateToken(index + 1, evaluator);
-            bool result = firstTokenResult && secondTokenResult;
+            PolicyOutcome firstTokenOutcome = EvaluateToken(index - 1, evaluator);
+            PolicyOutcome secondTokenOutcome = EvaluateToken(index + 1, evaluator);
+            PolicyOutcome outcome = EvaluateLogicalCondition(firstTokenOutcome, secondTokenOutcome,
+                isAndCondition: true);
 
-            Tokens[index - 1] = new ResultToken(result);
+            Tokens[index - 1] = new ResultToken(outcome);
             Tokens.RemoveAt(index);
             Tokens.RemoveAt(index);
             index--;
 
-            Console.WriteLine(this);
+            _options.Logger?.Invoke(ToString());
         }
 
         // Iterate tokens and resolve OR conditions
@@ -58,23 +65,24 @@ internal sealed record Expression : Token
             if (Tokens[index] is not OrToken)
                 continue;
 
-            bool firstTokenResult = EvaluateToken(index - 1, evaluator);
-            bool secondTokenResult = EvaluateToken(index + 1, evaluator);
-            bool result = firstTokenResult || secondTokenResult;
+            PolicyOutcome firstTokenResult = EvaluateToken(index - 1, evaluator);
+            PolicyOutcome secondTokenResult = EvaluateToken(index + 1, evaluator);
+            PolicyOutcome result = EvaluateLogicalCondition(firstTokenResult, secondTokenResult,
+                isAndCondition: false);
 
             // Short circuit: If any OR condition is true, the whole expression is true
-            if (result)
-                return true;
+            if (result == PolicyOutcome.Pass)
+                return PolicyOutcome.Pass;
 
             Tokens[index - 1] = new ResultToken(result);
             Tokens.RemoveAt(index);
             Tokens.RemoveAt(index);
 
-            Console.WriteLine(this);
+            _options.Logger?.Invoke(ToString());
         }
 
         if (Tokens is [ResultToken rt])
-            return rt.Result;
+            return rt.Outcome;
 
 #pragma warning disable S907 // "goto" statement should not be used
         if (Tokens.Count > 1)
@@ -99,7 +107,7 @@ internal sealed record Expression : Token
     /// <param name="evaluator">The policy evaluation function.</param>
     /// <returns>The result of the expression evaluation.</returns>
     /// <exception cref="PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
-    private bool EvaluateToken(int index, Func<string, bool> evaluator)
+    private PolicyOutcome EvaluateToken(int index, Func<string, PolicyOutcome> evaluator)
     {
         switch (Tokens[index])
         {
@@ -107,23 +115,49 @@ internal sealed record Expression : Token
                 return e.Evaluate(evaluator);
 
             case ResultToken r:
-                return r.Result;
+                return r.Outcome;
 
             case PolicyNameToken p:
-                bool result = evaluator(p.Name);
-                AssignResultForPolicyName(p.Name, result, index);
-                return result;
+                PolicyOutcome outcome = evaluator(p.Name);
+                if (outcome == PolicyOutcome.InvalidPolicyName)
+                    throw new ExpressionSyntaxErrorException(p.Position, $"A policy named {p.Name} does not exist.");
+                AssignOutcomeForPolicy(p.Name, outcome, index);
+                return outcome;
 
             default:
                 throw new PolicyEvaluatorException($"Invalid token type {Tokens[index].GetType()}");
         }
     }
 
+    private static PolicyOutcome EvaluateLogicalCondition(PolicyOutcome outcome1, PolicyOutcome outcome2,
+        bool isAndCondition)
+    {
+        Debug.Assert(outcome1 != PolicyOutcome.InvalidPolicyName && outcome2 != PolicyOutcome.InvalidPolicyName);
+
+        if (outcome1 == PolicyOutcome.NotApplicable && outcome2 == PolicyOutcome.NotApplicable)
+            return PolicyOutcome.NotApplicable;
+        if (outcome1 == PolicyOutcome.NotApplicable)
+            return outcome2;
+        if (outcome2 == PolicyOutcome.NotApplicable)
+            return outcome1;
+
+        if (isAndCondition)
+        {
+            return outcome1 == PolicyOutcome.Pass && outcome2 == PolicyOutcome.Pass
+                ? PolicyOutcome.Pass
+                : PolicyOutcome.Fail;
+        }
+
+        return outcome1 == PolicyOutcome.Pass || outcome2 == PolicyOutcome.Pass
+            ? PolicyOutcome.Pass
+            : PolicyOutcome.Fail;
+    }
+
     /// <summary>
     ///     For all <see cref="PolicyNameToken"/> tokens in this expression, replace with a <see cref="ResultToken"/>
-    ///     containing the specified <paramref name="result"/>.
+    ///     containing the specified <paramref name="outcome"/>.
     /// </summary>
-    private void AssignResultForPolicyName(string policyName, bool result, int avoidAtIndex = -1)
+    private void AssignOutcomeForPolicy(string policyName, PolicyOutcome outcome, int avoidAtIndex = -1)
     {
         for (int i = 0; i < Tokens.Count; i++)
         {
@@ -133,10 +167,10 @@ internal sealed record Expression : Token
             switch (Tokens[i])
             {
                 case PolicyNameToken pnToken when pnToken.Name.Equals(policyName, StringComparison.OrdinalIgnoreCase):
-                    Tokens[i] = new ResultToken(result);
+                    Tokens[i] = new ResultToken(outcome);
                     break;
                 case Expression expr:
-                    expr.AssignResultForPolicyName(policyName, result);
+                    expr.AssignOutcomeForPolicy(policyName, outcome);
                     break;
             }
         }

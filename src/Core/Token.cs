@@ -50,8 +50,8 @@ internal sealed record PolicyNameToken(int Position, string Name) : PositionalTo
 ///     A special token that holds the result of evaluating a policy from a <see cref="PolicyNameToken"/>
 ///     token.
 /// </summary>
-/// <param name="Result">The result of the policy evaluation.</param>
-internal sealed record ResultToken(bool Result) : Token
+/// <param name="Outcome">The result of the policy evaluation.</param>
+internal sealed record ResultToken(PolicyOutcome Outcome) : Token
 {
-    public override string ToString() => Result.ToString();
+    public override string ToString() => Outcome.ToString();
 }

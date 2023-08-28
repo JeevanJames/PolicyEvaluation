@@ -20,6 +20,7 @@
     <Rule Id="SA1309" Action="None" _Description="Field names must not begin with underscore" _Justification="Require underscore prefix for all private fields." />
     <!-- StyleCop.CSharp.MaintainabilityRules -->
     <Rule Id="SA1402" Action="None" _Description="File may only contain a single class" _Justification="Primary classes should be in separate files, but supporting classes should be allowed to be next to their primary classes." />
+    <Rule Id="SA1405" Action="None" _Description="Debug.Assert should provide message text" _Justification="Not needed to provide a message." />
     <!-- StyleCop.CSharp.LayoutRules -->
     <Rule Id="SA1503" Action="None" _Description="Braces must not be omitted" _Justification="Braces not needed for single line blocks." />
     <Rule Id="SA1512" Action="None" _Description="A single-line comment within C# code is followed by a blank line." _Justification="This is preventing special comments like TODO, which may need to be on their own line."/>

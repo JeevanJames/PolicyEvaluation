@@ -7,12 +7,20 @@ public sealed class PolicyEvaluatorTests
 
     public PolicyEvaluatorTests(ITestOutputHelper output)
     {
-        _evaluator = new PolicyEvaluator(TestPolicyEvaluator);
+        _evaluator = new PolicyEvaluator(TestPolicyEvaluator, new() { Logger = output.WriteLine });
         _output = output;
     }
 
-    private static bool TestPolicyEvaluator(string policyName) =>
-        policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase);
+    private static PolicyOutcome TestPolicyEvaluator(string policyName)
+    {
+        if (policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase))
+            return PolicyOutcome.Pass;
+        if (policyName.StartsWith("False", StringComparison.OrdinalIgnoreCase))
+            return PolicyOutcome.Fail;
+        if (policyName.StartsWith("NA", StringComparison.OrdinalIgnoreCase))
+            return PolicyOutcome.NotApplicable;
+        return PolicyOutcome.InvalidPolicyName;
+    }
 
     [Theory]
     [InlineData("True1", true)]
@@ -88,6 +96,11 @@ public sealed class PolicyEvaluatorTests
     [InlineData("True1 AND (False2 OR (True3 AND False4))")]
     [InlineData("(True1 AND)")]
     [InlineData("True1 AND False2 True3")]
+    [InlineData("True1 AND Blah")]
+    [InlineData("True1 OR Blah")]
+    [InlineData("Blah AND False1")]
+    [InlineData("Blah OR False1")]
+    [InlineData("Blah1 OR True1 AND Blah2")]
     public void ExpressionSyntaxErrorExceptionTests(string expression)
     {
         _output.WriteLine(expression);
