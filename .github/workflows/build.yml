@@ -54,6 +54,5 @@ jobs:
     steps:
       - name: "Publish NuGet package"
         run: |
-          echo Test
-          # dotnet pack ./src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=${{github.tag_name}}
-
+          dotnet pack ./src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=${{github.ref_name}}
+          dotnet nuget push ./src/Core/bin/Release/*.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
