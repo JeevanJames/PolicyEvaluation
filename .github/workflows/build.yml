@@ -41,9 +41,12 @@ jobs:
       - name: "Test"
         run: dotnet test -c Release
       - name: "Log Details"
+        shell: bash
         run: |
           pwd
           tree
+          dotnet pack ./src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=${{github.ref_name}}
+          ls src/Core/bin/Release
           echo ${{github.ref}}
           echo ${{github.ref_type}}
           echo ${{github.ref_name}}
