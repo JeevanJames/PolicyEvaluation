@@ -53,7 +53,16 @@ jobs:
     needs: build
     if: github.ref_type == 'tag'
     steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3.6.0
+        with:
+          lfs: true
+          fetch-depth: 0
       - name: "Publish NuGet package"
         run: |
+          echo "Build package..."
           dotnet pack src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=${{github.ref_name}}
-          dotnet nuget push ./src/Core/bin/Release/Jeevan.PolicyEvaluation.${{github.ref_name}}.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
+          echo "Package created"
+          echo "Publishing package..."
+          dotnet nuget push src/Core/bin/Release/Jeevan.PolicyEvaluation.${{github.ref_name}}.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
+          echo "Package published"
