@@ -55,5 +55,11 @@ jobs:
     steps:
       - name: "Publish NuGet package"
         run: |
+          pwd
+          echo "Build package..."
           dotnet pack src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=${{github.ref_name}}
+          echo "Package created"
+          tree
+          echo "Publishing package..."
           dotnet nuget push src/Core/bin/Release/Jeevan.PolicyEvaluation.${{github.ref_name}}.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
+          echo "Package published"
