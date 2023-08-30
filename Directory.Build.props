@@ -19,7 +19,7 @@
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/JeevanJames/PolicyEvaluation</PackageProjectUrl>
-        <PackageIcon>Icon.png</PackageIcon>
+        <!--<PackageIcon>Icon.png</PackageIcon>-->
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/JeevanJames/PolicyEvaluation.git</RepositoryUrl>
         <RepositoryType>Git</RepositoryType>
