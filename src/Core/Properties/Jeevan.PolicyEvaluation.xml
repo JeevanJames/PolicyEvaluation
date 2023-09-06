@@ -153,6 +153,13 @@
             <param name="policyName">The invalid policy name.</param>
             <returns>An <see cref="T:Jeevan.PolicyEvaluation.IPolicyOutcome"/> instance that indicates an invalid policy name.</returns>
         </member>
+        <member name="M:Jeevan.PolicyEvaluation.PolicyOutcome.Error(System.String)">
+            <summary>
+                Returns an outcome of a policy evaluation that indicates an unexpected error.
+            </summary>
+            <param name="errorMessage">The message describing the error.</param>
+            <returns>An <see cref="T:Jeevan.PolicyEvaluation.PolicyOutcome"/> instance that indicates an unexpected error.</returns>
+        </member>
         <member name="T:Jeevan.PolicyEvaluation.IPolicyOutcome">
             <summary>
                 The outcome of the evaluation of a single policy.

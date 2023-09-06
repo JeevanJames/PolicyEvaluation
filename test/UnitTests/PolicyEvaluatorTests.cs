@@ -112,6 +112,8 @@ public abstract class PolicyEvaluatorTests
     [InlineData(26, "True", 0)]
     [InlineData(27, "", 0)]
     [InlineData(28, "    ", 0)]
+    [InlineData(29, "True1 AND False34", 10)]
+    [InlineData(30, "False2 OR True35", 10)]
     public void ExpressionSyntaxErrorExceptionTests(int index, string expression, int expectedPosition)
     {
         _output.WriteLine($"{index}: {expression}");
@@ -139,4 +141,24 @@ public abstract class PolicyEvaluatorTests
 
         _output.WriteLine(exception.Message);
     }
+}
+
+internal static class PolicyEvaluatorStaticHelper
+{
+    internal static IPolicyOutcome EvaluatePolicy(string policyName)
+    {
+        if (policyName.EndsWith("34"))
+            return PolicyOutcome.Error("Weird policy name! Why does it end with '34'?");
+        if (policyName.EndsWith("35"))
+            throw new InvalidOperationException("Policy names should not end with '35'!");
+        if (policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase))
+            return PolicyOutcome.Pass;
+        if (policyName.StartsWith("False", StringComparison.OrdinalIgnoreCase))
+            return PolicyOutcome.Fail("Failed");
+        if (policyName.StartsWith("NA", StringComparison.OrdinalIgnoreCase))
+            return PolicyOutcome.NotApplicable;
+        return PolicyOutcome.InvalidPolicyName(policyName);
+    }
+
+    internal static bool IsValidPolicyName(string policyName) => char.IsNumber(policyName[^1]);
 }

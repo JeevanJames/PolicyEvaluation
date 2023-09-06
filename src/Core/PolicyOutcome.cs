@@ -30,6 +30,13 @@ public static class PolicyOutcome
     /// <param name="policyName">The invalid policy name.</param>
     /// <returns>An <see cref="IPolicyOutcome"/> instance that indicates an invalid policy name.</returns>
     public static IPolicyOutcome InvalidPolicyName(string policyName) => new InvalidPolicyNameOutcome(policyName);
+
+    /// <summary>
+    ///     Returns an outcome of a policy evaluation that indicates an unexpected error.
+    /// </summary>
+    /// <param name="errorMessage">The message describing the error.</param>
+    /// <returns>An <see cref="PolicyOutcome"/> instance that indicates an unexpected error.</returns>
+    public static IPolicyOutcome Error(string errorMessage) => new ErrorOutcome(errorMessage);
 }
 
 /// <summary>

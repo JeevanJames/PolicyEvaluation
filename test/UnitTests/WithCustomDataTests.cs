@@ -29,16 +29,9 @@ public sealed class WithCustomDataTests : PolicyEvaluatorTests,
 
 internal sealed class PolicyEvaluatorHelper
 {
-    internal IPolicyOutcome EvaluatePolicy(string policyName)
-    {
-        if (policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase))
-            return PolicyOutcome.Pass;
-        if (policyName.StartsWith("False", StringComparison.OrdinalIgnoreCase))
-            return PolicyOutcome.Fail("Failed");
-        if (policyName.StartsWith("NA", StringComparison.OrdinalIgnoreCase))
-            return PolicyOutcome.NotApplicable;
-        return PolicyOutcome.InvalidPolicyName(policyName);
-    }
+    internal IPolicyOutcome EvaluatePolicy(string policyName) =>
+        PolicyEvaluatorStaticHelper.EvaluatePolicy(policyName);
 
-    internal bool IsValidPolicyName(string policyName) => char.IsNumber(policyName[^1]);
+    internal bool IsValidPolicyName(string policyName) =>
+        PolicyEvaluatorStaticHelper.IsValidPolicyName(policyName);
 }
