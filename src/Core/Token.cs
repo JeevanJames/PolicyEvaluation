@@ -51,7 +51,10 @@ internal sealed record PolicyNameToken(int Position, string Name) : PositionalTo
 ///     token.
 /// </summary>
 /// <param name="Outcome">The result of the policy evaluation.</param>
-internal sealed record ResultToken(PolicyOutcome Outcome) : Token
+internal sealed record ResultToken(IPolicyOutcome Outcome) : Token
 {
-    public override string ToString() => Outcome.ToString();
+#pragma warning disable S3877 // Exceptions should not be thrown from unexpected methods
+    public override string ToString() =>
+        Outcome.ToString() ?? throw new PolicyEvaluatorException($"Policy evaluator of type {Outcome.GetType()} does not have a string representation.");
+#pragma warning restore S3877 // Exceptions should not be thrown from unexpected methods
 }

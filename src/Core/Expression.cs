@@ -20,7 +20,7 @@ internal sealed record Expression : Token
 
     internal IList<Token> Tokens { get; }
 
-    internal PolicyOutcome Evaluate(PolicyEvaluatorFunc evaluator, object? state)
+    internal IPolicyOutcome Evaluate(PolicyEvaluatorFunc evaluator, object? state)
     {
 #pragma warning disable SA1011 // Closing square brackets should be spaced correctly
         // Special case: If there is only a single token, evaluate that token directly.
@@ -34,7 +34,7 @@ internal sealed record Expression : Token
         }
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 
-    restart:
+    restart: //TODO: Remove goto
 
         // Iterate tokens and resolve AND conditions first.
         // Start at index 1, because the tokenization will always ensure that the first token is not
@@ -45,9 +45,9 @@ internal sealed record Expression : Token
             if (Tokens[index] is not AndToken)
                 continue;
 
-            PolicyOutcome firstTokenOutcome = EvaluateToken(index - 1, evaluator, state);
-            PolicyOutcome secondTokenOutcome = EvaluateToken(index + 1, evaluator, state);
-            PolicyOutcome outcome = EvaluateLogicalCondition(firstTokenOutcome, secondTokenOutcome,
+            IPolicyOutcome firstTokenOutcome = EvaluateToken(index - 1, evaluator, state);
+            IPolicyOutcome secondTokenOutcome = EvaluateToken(index + 1, evaluator, state);
+            IPolicyOutcome outcome = EvaluateLogicalCondition(firstTokenOutcome, secondTokenOutcome,
                 isAndCondition: true);
 
             Tokens[index - 1] = new ResultToken(outcome);
@@ -65,9 +65,9 @@ internal sealed record Expression : Token
             if (Tokens[index] is not OrToken)
                 continue;
 
-            PolicyOutcome firstTokenResult = EvaluateToken(index - 1, evaluator, state);
-            PolicyOutcome secondTokenResult = EvaluateToken(index + 1, evaluator, state);
-            PolicyOutcome result = EvaluateLogicalCondition(firstTokenResult, secondTokenResult,
+            IPolicyOutcome firstTokenResult = EvaluateToken(index - 1, evaluator, state);
+            IPolicyOutcome secondTokenResult = EvaluateToken(index + 1, evaluator, state);
+            IPolicyOutcome result = EvaluateLogicalCondition(firstTokenResult, secondTokenResult,
                 isAndCondition: false);
 
             // Short circuit: If any OR condition is true, the whole expression is true
@@ -108,7 +108,7 @@ internal sealed record Expression : Token
     /// <param name="state">Optional custom state that can be passed into the evalator delegate.</param>
     /// <returns>The result of the expression evaluation.</returns>
     /// <exception cref="PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
-    private PolicyOutcome EvaluateToken(int index, PolicyEvaluatorFunc evaluator, object? state)
+    private IPolicyOutcome EvaluateToken(int index, PolicyEvaluatorFunc evaluator, object? state)
     {
         switch (Tokens[index])
         {
@@ -119,9 +119,9 @@ internal sealed record Expression : Token
                 return r.Outcome;
 
             case PolicyNameToken p:
-                PolicyOutcome outcome = evaluator(p.Name, state);
-                if (outcome == PolicyOutcome.InvalidPolicyName)
-                    throw new ExpressionSyntaxErrorException(p.Position, $"A policy named {p.Name} does not exist.");
+                IPolicyOutcome outcome = evaluator(p.Name, state);
+                if (outcome is InvalidPolicyNameOutcome o)
+                    throw new ExpressionSyntaxErrorException(p.Position, $"A policy named {o.PolicyName} does not exist.");
                 AssignOutcomeForPolicy(p.Name, outcome, index);
                 return outcome;
 
@@ -130,35 +130,41 @@ internal sealed record Expression : Token
         }
     }
 
-    private static PolicyOutcome EvaluateLogicalCondition(PolicyOutcome outcome1, PolicyOutcome outcome2,
+    private static IPolicyOutcome EvaluateLogicalCondition(IPolicyOutcome outcome1, IPolicyOutcome outcome2,
         bool isAndCondition)
     {
-        Debug.Assert(outcome1 != PolicyOutcome.InvalidPolicyName && outcome2 != PolicyOutcome.InvalidPolicyName);
+        Debug.Assert(outcome1 is not InvalidPolicyNameOutcome && outcome2 is not InvalidPolicyNameOutcome);
 
-        if (outcome1 == PolicyOutcome.NotApplicable && outcome2 == PolicyOutcome.NotApplicable)
+        if (outcome1 is NotApplicableOutcome && outcome2 is NotApplicableOutcome)
             return PolicyOutcome.NotApplicable;
-        if (outcome1 == PolicyOutcome.NotApplicable)
+        if (outcome1 is NotApplicableOutcome)
             return outcome2;
-        if (outcome2 == PolicyOutcome.NotApplicable)
+        if (outcome2 is NotApplicableOutcome)
             return outcome1;
 
         if (isAndCondition)
         {
-            return outcome1 == PolicyOutcome.Pass && outcome2 == PolicyOutcome.Pass
-                ? PolicyOutcome.Pass
-                : PolicyOutcome.Fail;
+            if (outcome1 is PassOutcome && outcome2 is PassOutcome)
+                return PolicyOutcome.Pass;
+            if (outcome1 is FailOutcome fo1)
+                return fo1;
+            if (outcome2 is FailOutcome fo2)
+                return fo2;
+            throw new PolicyEvaluatorException("Invalid condition reached when evaluating AND logical condition.");
         }
 
-        return outcome1 == PolicyOutcome.Pass || outcome2 == PolicyOutcome.Pass
-            ? PolicyOutcome.Pass
-            : PolicyOutcome.Fail;
+        if (outcome1 is PassOutcome || outcome2 is PassOutcome)
+            return PolicyOutcome.Pass;
+        if (outcome1 is FailOutcome fo && outcome2 is FailOutcome)
+            return fo; // We return the first fail outcome only
+        throw new PolicyEvaluatorException("Invalid condition reached when evaluating OR logical condition.");
     }
 
     /// <summary>
     ///     For all <see cref="PolicyNameToken"/> tokens in this expression, replace with a <see cref="ResultToken"/>
     ///     containing the specified <paramref name="outcome"/>.
     /// </summary>
-    private void AssignOutcomeForPolicy(string policyName, PolicyOutcome outcome, int avoidAtIndex = -1)
+    private void AssignOutcomeForPolicy(string policyName, IPolicyOutcome outcome, int avoidAtIndex = -1)
     {
         for (int i = 0; i < Tokens.Count; i++)
         {

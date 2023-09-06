@@ -11,20 +11,64 @@ public sealed class PolicyEvaluator
         _options = options ?? PolicyEvaluatorOptions.Default;
     }
 
-    public PolicyEvaluator(Func<string, PolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
+    public PolicyEvaluator(Func<string, IPolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
         : this((expr, _) => evaluator(expr), options)
     {
     }
 
-    public bool EvaluateExpression(string expression, object? state = null)
+    /// <summary>
+    ///     Evaluates a logic policy expression and returns whether it succeeds or fails.
+    ///     <br/>
+    ///     If the final policy outcome of the expression is <see cref="PolicyOutcome.NotApplicable"/>,
+    ///     then the expression will be considered to have passed.
+    /// </summary>
+    /// <param name="expression">The logical policy expression to evaluate.</param>
+    /// <param name="state">
+    ///     Optional custom data that is passed to the policy evaluation delegate and can be used to
+    ///     evaluate the policies.
+    /// </param>
+    /// <returns>
+    ///     An instance of <see cref="PassOutcome"/> if the expression evaluation is satisfied, otherwise
+    ///     an <see cref="FailOutcome"/> instance.
+    ///     <br/>
+    ///     Use the <see cref="IExpressionEvaluationOutcome.IsSatisfied"/> property to check of the
+    ///     result indicates a satisfied outcome.
+    ///     <br/>
+    ///     Alternatively, you can use the <see cref="IExpressionEvaluationOutcome.IsNotSatisfied"/>
+    ///     method to check if the expression was not satisfied and get the message related to the
+    ///     failure.
+    /// </returns>
+    /// <exception cref="PolicyEvaluatorException">
+    ///     Thrown on any error during evaluation except for syntax errors.
+    /// </exception>
+    /// <exception cref="ExpressionSyntaxErrorException">
+    ///     Thrown if the expression parsing results in a syntax error.
+    /// </exception>
+    public IExpressionEvaluationOutcome EvaluateExpression(string expression, object? state = null)
     {
+        ArgumentNullException.ThrowIfNull(expression);
+
+        if (expression.Length == 0)
+            throw new ExpressionSyntaxErrorException(0, "Expression is empty.");
+
+        // Parse the expression into a collection of positional tokens.
+        // This method throws syntax exceptions for any issue during parsing.
         PositionalToken[] tokens = Tokenize(expression, state).ToArray();
+
+        // Create an expression from the tokens, which is a collection of tokens at the same level.
+        // All nested tokens are grouped together as expressions.
+        // An expression is also created for the overall set of tokens and returned.
         Expression expr = CreateExpression(tokens);
-        return expr.Evaluate(_evaluator, state) switch
+
+        // Evaluate the outer-most expression and return the result.
+        // As part this call, inner expressions and policy tokens are also evaluated.
+        IPolicyOutcome finalOutcome = expr.Evaluate(_evaluator, state);
+
+        return finalOutcome switch
         {
-            PolicyOutcome.Pass or PolicyOutcome.NotApplicable => true, //TODO:
-            PolicyOutcome.Fail => false,
-            _ => throw new PolicyEvaluatorException("Invalid policy outcome."),
+            PassOutcome or NotApplicableOutcome => default(PassOutcome),
+            FailOutcome fo => fo,
+            _ => throw new PolicyEvaluatorException($"Invalid policy outcome type - {finalOutcome.GetType()}."),
         };
     }
 
@@ -56,10 +100,11 @@ public sealed class PolicyEvaluator
         return new Expression(outerTokens, _options);
     }
 
+    // One-pass parser to tokenize the string expression.
     private IEnumerable<PositionalToken> Tokenize(string expression, object? state)
     {
         // Tracking variables
-        PositionalToken token = StartToken.Default;
+        PositionalToken token = StartToken.Default; // Current token
         bool nested = false;
 
         int position = 0;
@@ -137,6 +182,10 @@ public sealed class PolicyEvaluator
             }
         }
 
+        // The last token cannot be the start token. This would indicate that the expression is white-space.
+        if (token is StartToken)
+            throw new ExpressionSyntaxErrorException(0, "Expression is blank.");
+
         // The last token should be a policy name or a closing parenthesis.
         if (token is not PolicyNameToken and not CloseParenthesisToken)
             throw new ExpressionSyntaxErrorException(position, "Expression should end with a policy name or a closing parenthesis.");
@@ -166,12 +215,4 @@ public sealed class PolicyEvaluator
 
         return true;
     }
-}
-
-public enum PolicyOutcome
-{
-    Pass,
-    Fail,
-    NotApplicable,
-    InvalidPolicyName,
 }

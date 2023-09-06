@@ -3,14 +3,20 @@
 public abstract class PolicyEvaluatorTests
 {
     private readonly ITestOutputHelper _output;
-    private readonly Fixture _fixture;
+    private readonly PolicyEvaluatorFixture _fixture;
     private readonly PolicyEvaluator _evaluator;
 
-    protected PolicyEvaluatorTests(ITestOutputHelper output, Fixture fixture)
+    protected PolicyEvaluatorTests(ITestOutputHelper output, PolicyEvaluatorFixture fixture)
     {
         _output = output;
         _fixture = fixture;
         _evaluator = fixture.CreateEvaluator(output);
+    }
+
+    [Fact]
+    public void NullExpressionTest()
+    {
+        Should.Throw<ArgumentNullException>(() => _evaluator.EvaluateExpression(null!, _fixture.CustomData));
     }
 
     [Theory]
@@ -23,8 +29,8 @@ public abstract class PolicyEvaluatorTests
     public void SimpleExpressionTests(string expression, bool expectedResult)
     {
         _output.WriteLine(expression);
-        bool result = _evaluator.EvaluateExpression(expression, _fixture.CustomData);
-        result.ShouldBe(expectedResult);
+        IExpressionEvaluationOutcome outcome = _evaluator.EvaluateExpression(expression, _fixture.CustomData);
+        outcome.ShouldBe(expectedResult);
     }
 
     [Theory]
@@ -72,46 +78,54 @@ public abstract class PolicyEvaluatorTests
     [InlineData(42, "NA1 OR NA2 AND NA3", true)]
     public void ComplexExpressionTests(int index, string expression, bool expectedResult)
     {
-        _output.WriteLine($"{index} {expression}");
-        bool result = _evaluator.EvaluateExpression(expression, _fixture.CustomData);
-        result.ShouldBe(expectedResult);
+        _output.WriteLine($"{index}: {expression}");
+        IExpressionEvaluationOutcome outcome = _evaluator.EvaluateExpression(expression, _fixture.CustomData);
+        outcome.ShouldBe(expectedResult);
     }
 
     [Theory]
-    [InlineData("True1 AND& False2 OR True3")]
-    [InlineData("False1 OR True2 && False3")]
-    [InlineData("True1 OR False2 (AND True3)")]
-    [InlineData("False1 OR True2 OR False3 AND")]
-    [InlineData("True1 OR OR False2 AND True3")]
-    [InlineData("False1 OR True2 ) AND False3")]
-    [InlineData("True1 AND (False2 AND True3")]
-    [InlineData("False1 OR True2 OR AND False3")]
-    [InlineData("(True1 OR False2 AND True3) AND")]
-    [InlineData("False1 OR OR True2 AND False3")]
-    [InlineData("True1 AND False2 OR True3)")]
-    [InlineData("AND True1 OR False2")]
-    [InlineData("AND")]
-    [InlineData("OR")]
-    [InlineData("True1 and False1")]
-    [InlineData("True1 AND (False2 OR (True3 AND False4))")]
-    [InlineData("(True1 AND)")]
-    [InlineData("True1 AND False2 True3")]
-    [InlineData("True1 AND Blah")]
-    [InlineData("True1 OR Blah")]
-    [InlineData("Blah AND False1")]
-    [InlineData("Blah OR False1")]
-    [InlineData("Blah1 OR True1 AND Blah2")]
-    [InlineData("InvalidPolicyName")]
-    [InlineData("True1 AND False_But_Invalid_Name")]
-    [InlineData("True")]
-    public void ExpressionSyntaxErrorExceptionTests(string expression)
+    [InlineData(1, "True1 AND& False2 OR True3", 6)]
+    [InlineData(2, "False1 OR True2 && False3", 16)]
+    [InlineData(3, "True1 OR False2 (AND True3)", 16)]
+    [InlineData(4, "False1 OR True2 OR False3 AND", 29)]
+    [InlineData(5, "True1 OR OR False2 AND True3", 9)]
+    [InlineData(6, "False1 OR True2 ) AND False3", 16)]
+    [InlineData(7, "True1 AND (False2 AND True3", 27)]
+    [InlineData(8, "False1 OR True2 OR AND False3", 19)]
+    [InlineData(9, "(True1 OR False2 AND True3) AND", 31)]
+    [InlineData(10, "False1 OR OR True2 AND False3", 10)]
+    [InlineData(11, "True1 AND False2 OR True3)", 25)]
+    [InlineData(12, "AND True1 OR False2", 0)]
+    [InlineData(13, "AND", 0)]
+    [InlineData(14, "OR", 0)]
+    [InlineData(15, "True1 and False1", 6)]
+    [InlineData(16, "True1 AND (False2 OR (True3 AND False4))", 21)]
+    [InlineData(17, "(True1 AND)", 10)]
+    [InlineData(18, "True1 AND False2 True3", 17)]
+    [InlineData(19, "True1 AND Blah", 10)]
+    [InlineData(20, "True1 OR Blah", 9)]
+    [InlineData(21, "Blah AND False1", 0)]
+    [InlineData(22, "Blah OR False1", 0)]
+    [InlineData(23, "Blah1 OR True1 AND Blah2", 19)]
+    [InlineData(24, "InvalidPolicyName", 0)]
+    [InlineData(25, "True1 AND False_But_Invalid_Name", 10)]
+    [InlineData(26, "True", 0)]
+    [InlineData(27, "", 0)]
+    [InlineData(28, "    ", 0)]
+    public void ExpressionSyntaxErrorExceptionTests(int index, string expression, int expectedPosition)
     {
-        _output.WriteLine(expression);
+        _output.WriteLine($"{index}: {expression}");
+
         ExpressionSyntaxErrorException exception = Should.Throw<ExpressionSyntaxErrorException>(
             () => _evaluator.EvaluateExpression(expression, _fixture.CustomData));
 
+        exception.Position.ShouldBeGreaterThanOrEqualTo(0);
+
+        _output.WriteLine(expression);
         _output.WriteLine(new string(' ', exception.Position) + '^');
         _output.WriteLine(exception.Message);
+
+        exception.Position.ShouldBe(expectedPosition);
     }
 
     [Theory]
@@ -125,85 +139,4 @@ public abstract class PolicyEvaluatorTests
 
         _output.WriteLine(exception.Message);
     }
-}
-
-public sealed class WithoutCustomData : PolicyEvaluatorTests, IClassFixture<WithoutCustomData.WithoutCustomDataFixture>
-{
-    public WithoutCustomData(ITestOutputHelper output, WithoutCustomDataFixture fixture)
-        : base(output, fixture)
-    {
-    }
-
-    public sealed class WithoutCustomDataFixture : Fixture
-    {
-        public override PolicyEvaluator CreateEvaluator(ITestOutputHelper logger)
-        {
-            return new PolicyEvaluator(TestPolicyEvaluator,
-                new PolicyEvaluatorOptions
-                {
-                    PolicyNameChecker = (name, _) => char.IsNumber(name[^1]),
-                    Logger = logger.WriteLine,
-                });
-        }
-
-        private static PolicyOutcome TestPolicyEvaluator(string policyName, object? state)
-        {
-            if (policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase))
-                return PolicyOutcome.Pass;
-            if (policyName.StartsWith("False", StringComparison.OrdinalIgnoreCase))
-                return PolicyOutcome.Fail;
-            if (policyName.StartsWith("NA", StringComparison.OrdinalIgnoreCase))
-                return PolicyOutcome.NotApplicable;
-            return PolicyOutcome.InvalidPolicyName;
-        }
-    }
-}
-
-public sealed class WithCustomData : PolicyEvaluatorTests, IClassFixture<WithCustomData.WithCustomDataFixture>
-{
-    public WithCustomData(ITestOutputHelper output, WithCustomDataFixture fixture)
-        : base(output, fixture)
-    {
-    }
-
-    public sealed class WithCustomDataFixture : Fixture
-    {
-        private readonly PolicyEvaluatorHelper _helper = new();
-
-        public override PolicyEvaluator CreateEvaluator(ITestOutputHelper logger)
-        {
-            return new PolicyEvaluator(_helper.EvaluatePolicy,
-                new PolicyEvaluatorOptions
-                {
-                    PolicyNameChecker =
-                        static (name, state) => state is PolicyEvaluatorHelper h && h.IsValidPolicyName(name),
-                    Logger = logger.WriteLine,
-                });
-        }
-
-        public override object CustomData => _helper;
-    }
-}
-
-public sealed class PolicyEvaluatorHelper
-{
-    public PolicyOutcome EvaluatePolicy(string policyName)
-    {
-        if (policyName.StartsWith("True", StringComparison.OrdinalIgnoreCase))
-            return PolicyOutcome.Pass;
-        if (policyName.StartsWith("False", StringComparison.OrdinalIgnoreCase))
-            return PolicyOutcome.Fail;
-        if (policyName.StartsWith("NA", StringComparison.OrdinalIgnoreCase))
-            return PolicyOutcome.NotApplicable;
-        return PolicyOutcome.InvalidPolicyName;
-    }
-
-    public bool IsValidPolicyName(string policyName) => char.IsNumber(policyName[^1]);
-}
-
-public abstract class Fixture
-{
-    public abstract PolicyEvaluator CreateEvaluator(ITestOutputHelper logger);
-
-    public virtual object? CustomData => null;
 }
