@@ -20,17 +20,17 @@ internal sealed record Expression : Token
 
     internal IList<Token> Tokens { get; }
 
-    internal PolicyOutcome Evaluate(Func<string, PolicyOutcome> evaluator)
+    internal PolicyOutcome Evaluate(Func<string, object?, PolicyOutcome> evaluator, object? state)
     {
         // Special case: If there is only a single token, evaluate that token directly.
 #pragma warning disable SA1011 // Closing square brackets should be spaced correctly
         switch (Tokens)
         {
             case [PolicyNameToken pnToken]:
-                return evaluator(pnToken.Name);
+                return evaluator(pnToken.Name, state);
 
             case [Expression expr]:
-                return expr.Evaluate(evaluator);
+                return expr.Evaluate(evaluator, state);
         }
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 
@@ -45,8 +45,8 @@ internal sealed record Expression : Token
             if (Tokens[index] is not AndToken)
                 continue;
 
-            PolicyOutcome firstTokenOutcome = EvaluateToken(index - 1, evaluator);
-            PolicyOutcome secondTokenOutcome = EvaluateToken(index + 1, evaluator);
+            PolicyOutcome firstTokenOutcome = EvaluateToken(index - 1, evaluator, state);
+            PolicyOutcome secondTokenOutcome = EvaluateToken(index + 1, evaluator, state);
             PolicyOutcome outcome = EvaluateLogicalCondition(firstTokenOutcome, secondTokenOutcome,
                 isAndCondition: true);
 
@@ -65,8 +65,8 @@ internal sealed record Expression : Token
             if (Tokens[index] is not OrToken)
                 continue;
 
-            PolicyOutcome firstTokenResult = EvaluateToken(index - 1, evaluator);
-            PolicyOutcome secondTokenResult = EvaluateToken(index + 1, evaluator);
+            PolicyOutcome firstTokenResult = EvaluateToken(index - 1, evaluator, state);
+            PolicyOutcome secondTokenResult = EvaluateToken(index + 1, evaluator, state);
             PolicyOutcome result = EvaluateLogicalCondition(firstTokenResult, secondTokenResult,
                 isAndCondition: false);
 
@@ -105,20 +105,22 @@ internal sealed record Expression : Token
     /// </summary>
     /// <param name="index">The index of the token in the <see cref="Tokens"/> collection.</param>
     /// <param name="evaluator">The policy evaluation function.</param>
+    /// <param name="state">Optional custom state that can be passed into the evalator delegate.</param>
     /// <returns>The result of the expression evaluation.</returns>
     /// <exception cref="PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
-    private PolicyOutcome EvaluateToken(int index, Func<string, PolicyOutcome> evaluator)
+    private PolicyOutcome EvaluateToken(int index, Func<string, object?, PolicyOutcome> evaluator,
+        object? state)
     {
         switch (Tokens[index])
         {
             case Expression e:
-                return e.Evaluate(evaluator);
+                return e.Evaluate(evaluator, state);
 
             case ResultToken r:
                 return r.Outcome;
 
             case PolicyNameToken p:
-                PolicyOutcome outcome = evaluator(p.Name);
+                PolicyOutcome outcome = evaluator(p.Name, state);
                 if (outcome == PolicyOutcome.InvalidPolicyName)
                     throw new ExpressionSyntaxErrorException(p.Position, $"A policy named {p.Name} does not exist.");
                 AssignOutcomeForPolicy(p.Name, outcome, index);

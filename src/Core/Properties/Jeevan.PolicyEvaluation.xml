@@ -12,7 +12,7 @@
                 is because one of the tokens it can contain is a nested expression.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,System.Func{System.String,Jeevan.PolicyEvaluation.PolicyOutcome})">
+        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,System.Func{System.String,System.Object,Jeevan.PolicyEvaluation.PolicyOutcome},System.Object)">
             <summary>
                 Resolves the value of a policy, given its corresponding token. Only the following token
                 types are supported:
@@ -26,6 +26,7 @@
             </summary>
             <param name="index">The index of the token in the <see cref="P:Jeevan.PolicyEvaluation.Expression.Tokens"/> collection.</param>
             <param name="evaluator">The policy evaluation function.</param>
+            <param name="state">Optional custom state that can be passed into the evalator delegate.</param>
             <returns>The result of the expression evaluation.</returns>
             <exception cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
         </member>
@@ -50,18 +51,10 @@
         </member>
         <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.String)">
             <summary>
-                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with a specified
-                error message.
+                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with a
+                specified error message.
             </summary>
             <param name="message">The message that describes the error.</param>
-        </member>
-        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.String,System.Exception)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with a specified
-                error message and a reference to the inner exception that is the cause of this exception.
-            </summary>
-            <param name="message">The message that describes the error.</param>
-            <param name="innerException">The exception that is the cause of the current exception.</param>
         </member>
         <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
             <summary>
@@ -74,6 +67,12 @@
             <param name="context">
                 The StreamingContext that contains contextual information about the source or destination.
             </param>
+        </member>
+        <member name="P:Jeevan.PolicyEvaluation.PolicyEvaluatorOptions.PolicyNameChecker">
+            <summary>
+                Gets or sets a delegate that can be run during the tokenization phase to check whether
+                a given policy name exists.
+            </summary>
         </member>
         <member name="P:Jeevan.PolicyEvaluation.PolicyEvaluatorOptions.Logger">
             <summary>

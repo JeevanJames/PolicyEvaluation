@@ -2,21 +2,25 @@
 
 public sealed class PolicyEvaluator
 {
+    private readonly Func<string, object?, PolicyOutcome> _evaluator;
     private readonly PolicyEvaluatorOptions _options;
 
     public PolicyEvaluator(Func<string, PolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
+        : this((expr, _) => evaluator(expr), options)
     {
-        _options = options ?? PolicyEvaluatorOptions.Default;
-        Evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
     }
 
-    public Func<string, PolicyOutcome> Evaluator { get; set; }
-
-    public bool EvaluateExpression(string expression)
+    public PolicyEvaluator(Func<string, object?, PolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
     {
-        PositionalToken[] tokens = Tokenize(expression).ToArray();
+        _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
+        _options = options ?? PolicyEvaluatorOptions.Default;
+    }
+
+    public bool EvaluateExpression(string expression, object? state = null)
+    {
+        PositionalToken[] tokens = Tokenize(expression, state).ToArray();
         Expression expr = CreateExpression(tokens);
-        return expr.Evaluate(Evaluator) switch
+        return expr.Evaluate(_evaluator, state) switch
         {
             PolicyOutcome.Pass or PolicyOutcome.NotApplicable => true, //TODO:
             PolicyOutcome.Fail => false,
@@ -52,7 +56,7 @@ public sealed class PolicyEvaluator
         return new Expression(outerTokens, _options);
     }
 
-    private static IEnumerable<PositionalToken> Tokenize(string expression)
+    private IEnumerable<PositionalToken> Tokenize(string expression, object? state)
     {
         // Tracking variables
         PositionalToken token = StartToken.Default;
@@ -119,7 +123,9 @@ public sealed class PolicyEvaluator
                             if (!IsValidPolicyName(identifier))
                                 throw new ExpressionSyntaxErrorException(position, $"Invalid policy name or unrecognized token in expression: {identifier}.");
                             if (token is not StartToken and not OperatorToken and not OpenParenthesisToken and not StartToken)
-                                throw new ExpressionSyntaxErrorException(position, "Invalid place for a policy name.");
+                                throw new ExpressionSyntaxErrorException(position, $"Invalid place for a policy name - {identifier}.");
+                            if (_options.PolicyNameChecker is not null && !_options.PolicyNameChecker(identifier, state))
+                                throw new ExpressionSyntaxErrorException(position, $"A policy named {identifier} does not exist.");
                             PolicyNameToken pnToken = new(position, identifier);
                             yield return pnToken;
                             token = pnToken;
