@@ -12,10 +12,11 @@ public static class PolicyOutcome
     /// <summary>
     ///     Returns a failed policy evaluation outcome with an optional failure message.
     /// </summary>
+    /// <param name="policyName">The name of the policy that failed.</param>
     /// <param name="failureMessage">The optional failure message.</param>
     /// <returns>An <see cref="IPolicyOutcome"/> instance.</returns>
-    public static IPolicyOutcome Fail(string? failureMessage = null) =>
-        failureMessage is null ? new FailOutcome() : new FailOutcome(failureMessage);
+    public static IPolicyOutcome Fail(string policyName, string? failureMessage = null) =>
+        failureMessage is null ? new FailOutcome(policyName) : new FailOutcome(policyName, failureMessage);
 
     /// <summary>
     ///     Represents an outcome of a policy evaluation where the policy could not be executed.
@@ -32,16 +33,6 @@ public static class PolicyOutcome
 }
 
 /// <summary>
-///     The outcome of the evaluation of a logical expression of policies.
-/// </summary>
-public interface IExpressionEvaluationOutcome
-{
-    bool IsSatisfied { get; }
-
-    bool IsNotSatisfied([NotNullWhen(true)] out string? message);
-}
-
-/// <summary>
 ///     The outcome of the evaluation of a single policy.
 /// </summary>
 public interface IPolicyOutcome
@@ -52,24 +43,25 @@ public readonly record struct PassOutcome : IExpressionEvaluationOutcome, IPolic
 {
     public bool IsSatisfied => true;
 
-    public bool IsNotSatisfied([NotNullWhen(true)] out string? message)
+    public bool IsNotSatisfied([NotNullWhen(true)] out string? policyName, [NotNullWhen(true)] out string? message)
     {
-        message = null;
+        policyName = message = null;
         return false;
     }
 }
 
-public readonly record struct FailOutcome(string FailureMessage) : IExpressionEvaluationOutcome, IPolicyOutcome
+public readonly record struct FailOutcome(string PolicyName, string FailureMessage) : IExpressionEvaluationOutcome, IPolicyOutcome
 {
-    public FailOutcome()
-        : this("The policy failed, but no details are specified.")
+    public FailOutcome(string policyName)
+        : this(policyName, "The policy failed, but no details are specified.")
     {
     }
 
     public bool IsSatisfied => false;
 
-    public bool IsNotSatisfied([NotNullWhen(true)] out string? message)
+    public bool IsNotSatisfied([NotNullWhen(true)] out string? policyName, [NotNullWhen(true)] out string? message)
     {
+        policyName = PolicyName;
         message = FailureMessage;
         return true;
     }

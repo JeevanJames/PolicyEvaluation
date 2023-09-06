@@ -49,6 +49,11 @@
         <member name="M:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
             <inheritdoc />
         </member>
+        <member name="T:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome">
+            <summary>
+                The outcome of the evaluation of a logical expression of policies.
+            </summary>
+        </member>
         <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator.EvaluateExpression(System.String,System.Object)">
             <summary>
                 Evaluates a logic policy expression and returns whether it succeeds or fails.
@@ -68,7 +73,7 @@
                 Use the <see cref="P:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome.IsSatisfied"/> property to check of the
                 result indicates a satisfied outcome.
                 <br/>
-                Alternatively, you can use the <see cref="M:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome.IsNotSatisfied(System.String@)"/>
+                Alternatively, you can use the <see cref="M:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome.IsNotSatisfied(System.String@,System.String@)"/>
                 method to check if the expression was not satisfied and get the message related to the
                 failure.
             </returns>
@@ -127,10 +132,11 @@
                 Represents a successful policy evaluation outcome.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.PolicyOutcome.Fail(System.String)">
+        <member name="M:Jeevan.PolicyEvaluation.PolicyOutcome.Fail(System.String,System.String)">
             <summary>
                 Returns a failed policy evaluation outcome with an optional failure message.
             </summary>
+            <param name="policyName">The name of the policy that failed.</param>
             <param name="failureMessage">The optional failure message.</param>
             <returns>An <see cref="T:Jeevan.PolicyEvaluation.IPolicyOutcome"/> instance.</returns>
         </member>
@@ -146,11 +152,6 @@
             </summary>
             <param name="policyName">The invalid policy name.</param>
             <returns>An <see cref="T:Jeevan.PolicyEvaluation.IPolicyOutcome"/> instance that indicates an invalid policy name.</returns>
-        </member>
-        <member name="T:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome">
-            <summary>
-                The outcome of the evaluation of a logical expression of policies.
-            </summary>
         </member>
         <member name="T:Jeevan.PolicyEvaluation.IPolicyOutcome">
             <summary>
