@@ -15,6 +15,11 @@ public class PolicyEvaluatorException : Exception
     {
     }
 
+    public PolicyEvaluatorException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="PolicyEvaluatorException" /> class with serialized
     ///     data.

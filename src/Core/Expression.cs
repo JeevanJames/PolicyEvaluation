@@ -119,11 +119,39 @@ internal sealed record Expression : Token
                 return r.Outcome;
 
             case PolicyNameToken p:
-                IPolicyOutcome outcome = evaluator(p.Name, state);
-                if (outcome is InvalidPolicyNameOutcome o)
-                    throw new ExpressionSyntaxErrorException(p.Position, $"A policy named {o.PolicyName} does not exist.");
-                AssignOutcomeForPolicy(p.Name, outcome, index);
-                return outcome;
+                // This is the place where we actually evaluate a PolicyNameToken.
+                // We want to handle any exceptions and invalid outcomes such as InvalidPolicyNameOutcome
+                // and ErrorOutcome and ensure that we only return PassOutcome, FailOutcome or NotApplicableOutcome.
+                try
+                {
+                    IPolicyOutcome outcome = evaluator(p.Name, state);
+                    switch (outcome)
+                    {
+                        case InvalidPolicyNameOutcome:
+                            throw new ExpressionSyntaxErrorException(p.Position,
+                                $"A policy named {p.Name} does not exist.");
+                        case ErrorOutcome eo:
+                            throw new ExpressionSyntaxErrorException(p.Position, $"""
+                                An unexpected error occurred when evaluating policy {p.Name}. Details below:
+                                {eo.ErrorMessage}
+                                """);
+                        default:
+                            Debug.Assert(outcome is PassOutcome or FailOutcome or NotApplicableOutcome);
+                            AssignOutcomeForPolicy(p.Name, outcome, index);
+                            return outcome;
+                    }
+                }
+                catch (PolicyEvaluatorException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw new ExpressionSyntaxErrorException(p.Position, $"""
+                        Unhandled exception when evaluating policy {p.Name}.
+                        See inner exception for details.
+                        """, ex);
+                }
 
             default:
                 throw new PolicyEvaluatorException($"Invalid token type {Tokens[index].GetType()}");

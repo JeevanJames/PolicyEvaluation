@@ -14,6 +14,12 @@ public sealed class ExpressionSyntaxErrorException : PolicyEvaluatorException
         Position = position;
     }
 
+    public ExpressionSyntaxErrorException(int position, string message, Exception innerException)
+        : base(message, innerException)
+    {
+        Position = position;
+    }
+
     private ExpressionSyntaxErrorException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {

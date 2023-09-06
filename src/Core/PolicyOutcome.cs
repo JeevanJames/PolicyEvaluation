@@ -70,3 +70,14 @@ public readonly record struct FailOutcome(string PolicyName, string FailureMessa
 internal readonly record struct NotApplicableOutcome : IPolicyOutcome;
 
 internal readonly record struct InvalidPolicyNameOutcome(string PolicyName) : IPolicyOutcome;
+
+internal readonly record struct ErrorOutcome(string ErrorMessage) : IPolicyOutcome
+{
+    internal ErrorOutcome(Exception exception)
+        : this(exception.Message)
+    {
+        ErrorDetails = exception.ToString();
+    }
+
+    internal string? ErrorDetails { get; }
+}
