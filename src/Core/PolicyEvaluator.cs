@@ -2,18 +2,18 @@
 
 public sealed class PolicyEvaluator
 {
-    private readonly Func<string, object?, PolicyOutcome> _evaluator;
+    private readonly PolicyEvaluatorFunc _evaluator;
     private readonly PolicyEvaluatorOptions _options;
+
+    public PolicyEvaluator(PolicyEvaluatorFunc evaluator, PolicyEvaluatorOptions? options = null)
+    {
+        _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
+        _options = options ?? PolicyEvaluatorOptions.Default;
+    }
 
     public PolicyEvaluator(Func<string, PolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
         : this((expr, _) => evaluator(expr), options)
     {
-    }
-
-    public PolicyEvaluator(Func<string, object?, PolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
-    {
-        _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-        _options = options ?? PolicyEvaluatorOptions.Default;
     }
 
     public bool EvaluateExpression(string expression, object? state = null)

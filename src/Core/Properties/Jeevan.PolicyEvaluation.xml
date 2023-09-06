@@ -12,7 +12,7 @@
                 is because one of the tokens it can contain is a nested expression.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,System.Func{System.String,System.Object,Jeevan.PolicyEvaluation.PolicyOutcome},System.Object)">
+        <member name="M:Jeevan.PolicyEvaluation.Expression.EvaluateToken(System.Int32,Jeevan.PolicyEvaluation.PolicyEvaluatorFunc,System.Object)">
             <summary>
                 Resolves the value of a policy, given its corresponding token. Only the following token
                 types are supported:

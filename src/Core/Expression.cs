@@ -20,10 +20,10 @@ internal sealed record Expression : Token
 
     internal IList<Token> Tokens { get; }
 
-    internal PolicyOutcome Evaluate(Func<string, object?, PolicyOutcome> evaluator, object? state)
+    internal PolicyOutcome Evaluate(PolicyEvaluatorFunc evaluator, object? state)
     {
-        // Special case: If there is only a single token, evaluate that token directly.
 #pragma warning disable SA1011 // Closing square brackets should be spaced correctly
+        // Special case: If there is only a single token, evaluate that token directly.
         switch (Tokens)
         {
             case [PolicyNameToken pnToken]:
@@ -108,8 +108,7 @@ internal sealed record Expression : Token
     /// <param name="state">Optional custom state that can be passed into the evalator delegate.</param>
     /// <returns>The result of the expression evaluation.</returns>
     /// <exception cref="PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
-    private PolicyOutcome EvaluateToken(int index, Func<string, object?, PolicyOutcome> evaluator,
-        object? state)
+    private PolicyOutcome EvaluateToken(int index, PolicyEvaluatorFunc evaluator, object? state)
     {
         switch (Tokens[index])
         {
