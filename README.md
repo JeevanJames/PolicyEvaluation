@@ -38,13 +38,30 @@ dotnet add <project> package Jeevan.PolicyEvaluation
 
 ## Usage
 
-Include the namespace `Jeevan.PolicyEvaluation` and use the static `PolicyEvaluator.EvaluateExpression` method to perform the expression evaluation. This method accepts a delegate that will evaluate the policies based on their name.
-
 ```cs
-string expression = "Policy1 AND (Policy2 OR Policy3)";
-bool evaluationResult = PolicyEvaluator.EvaluateExpression(expression,
-    policyName =>
-    {
-        // Perform policy evaluation here.
-    });
+// Import the namespace Jeevan.PolicyEvaluation
+using Jeevan.PolicyEvaluation;
+
+// Declare a function to evaluate a policy, given its name.
+Func<string, IPolicyOutcome> policyEvaluatorLogic = policyName =>
+{
+    // Perform policy evaluation here.
+    // Use methods from PolicyOutcome to generate the result.
+};
+
+// Instantiate the PolicyEvaluator class
+PolicyEvaluator evaluator = new(policyEvaluatorLogic);
+
+// Call the EvaluateExpression method to evaluate an expression.
+const string expression = "Policy1 AND (Policy2 OR Policy3)";
+var result = evaluator.EvaluateExpression(expression);
+
+// You can check whether the expression was satisfied.
+if (result.IsSatisfied)
+    Console.WriteLine("Expression was satisfied.");
+
+// OR you can check whether the expression was not satisfied and get the reason and which policy
+// caused the expression to fail.
+if (result.IsNotSatisfied(out string? policyName, out string? failureMessage))
+    Console.WriteLine($"Policy {policyName} failed with error {failureMessage}.");
 ```
