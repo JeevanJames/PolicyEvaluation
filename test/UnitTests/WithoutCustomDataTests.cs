@@ -12,12 +12,9 @@ public sealed class WithoutCustomDataTests : PolicyEvaluatorTests,
     {
         public override PolicyEvaluator CreateEvaluator(ITestOutputHelper logger)
         {
-            return new PolicyEvaluator(TestPolicyEvaluator,
-                new PolicyEvaluatorOptions
-                {
-                    PolicyNameChecker = (name, _) => PolicyEvaluatorStaticHelper.IsValidPolicyName(name),
-                    Logger = logger.WriteLine,
-                });
+            return new PolicyEvaluator(TestPolicyEvaluator, builder => builder
+                .LogWith(logger.WriteLine)
+                .CheckPolicyNameWith(PolicyEvaluatorStaticHelper.IsValidPolicyName));
         }
 
         private static IPolicyOutcome TestPolicyEvaluator(string policyName, object? state) =>

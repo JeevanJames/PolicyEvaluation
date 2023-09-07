@@ -5,14 +5,22 @@ public sealed class PolicyEvaluator
     private readonly PolicyEvaluatorFunc _evaluator;
     private readonly PolicyEvaluatorOptions _options;
 
-    public PolicyEvaluator(PolicyEvaluatorFunc evaluator, PolicyEvaluatorOptions? options = null)
+    public PolicyEvaluator(PolicyEvaluatorFunc evaluator, Action<PolicyEvaluatorOptionsBuilder>? optionsBuilder = null)
     {
         _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-        _options = options ?? PolicyEvaluatorOptions.Default;
+        if (optionsBuilder is null)
+            _options = PolicyEvaluatorOptions.Default;
+        else
+        {
+            PolicyEvaluatorOptionsBuilder builder = new();
+            optionsBuilder(builder);
+            _options = builder.Build();
+        }
     }
 
-    public PolicyEvaluator(Func<string, IPolicyOutcome> evaluator, PolicyEvaluatorOptions? options = null)
-        : this((expr, _) => evaluator(expr), options)
+    public PolicyEvaluator(Func<string, IPolicyOutcome> evaluator,
+        Action<PolicyEvaluatorOptionsBuilder>? optionsBuilder = null)
+        : this((expr, _) => evaluator(expr), optionsBuilder)
     {
     }
 

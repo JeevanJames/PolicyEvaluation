@@ -14,13 +14,9 @@ public sealed class WithCustomDataTests : PolicyEvaluatorTests,
 
         public override PolicyEvaluator CreateEvaluator(ITestOutputHelper logger)
         {
-            return new PolicyEvaluator(_helper.EvaluatePolicy,
-                new PolicyEvaluatorOptions
-                {
-                    PolicyNameChecker =
-                        static (name, state) => state is PolicyEvaluatorHelper h && h.IsValidPolicyName(name),
-                    Logger = logger.WriteLine,
-                });
+            return new PolicyEvaluator(_helper.EvaluatePolicy, builder => builder
+                .LogWith(logger.WriteLine)
+                .CheckPolicyNameWith<PolicyEvaluatorHelper>(static (name, state) => state.IsValidPolicyName(name)));
         }
 
         public override object CustomData => _helper;
