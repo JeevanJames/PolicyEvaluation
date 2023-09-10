@@ -1,6 +1,6 @@
 ﻿namespace Jeevan.PolicyEvaluation.UnitTests;
 
-public sealed class WithoutCustomDataTests : PolicyEvaluatorTests,
+public sealed class WithoutCustomDataTests : PolicyEvaluatorTests<object>,
     IClassFixture<WithoutCustomDataTests.WithoutCustomDataFixture>
 {
     public WithoutCustomDataTests(ITestOutputHelper output, WithoutCustomDataFixture fixture)
@@ -8,7 +8,7 @@ public sealed class WithoutCustomDataTests : PolicyEvaluatorTests,
     {
     }
 
-    public sealed class WithoutCustomDataFixture : PolicyEvaluatorFixture
+    public sealed class WithoutCustomDataFixture : PolicyEvaluatorFixture<object>
     {
         public override PolicyEvaluator CreateEvaluator(ITestOutputHelper logger)
         {
@@ -17,7 +17,7 @@ public sealed class WithoutCustomDataTests : PolicyEvaluatorTests,
                 .CheckPolicyNameWith(PolicyEvaluatorStaticHelper.IsValidPolicyName));
         }
 
-        private static IPolicyOutcome TestPolicyEvaluator(string policyName, object? state) =>
+        private static IPolicyOutcome TestPolicyEvaluator(string policyName) =>
             PolicyEvaluatorStaticHelper.EvaluatePolicy(policyName);
     }
 }

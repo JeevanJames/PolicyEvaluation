@@ -1,8 +1,9 @@
 ﻿namespace Jeevan.PolicyEvaluation.UnitTests;
 
-public abstract class PolicyEvaluatorFixture
+public abstract class PolicyEvaluatorFixture<TState>
+    where TState : class
 {
-    public abstract PolicyEvaluator CreateEvaluator(ITestOutputHelper logger);
+    public abstract PolicyEvaluator<TState> CreateEvaluator(ITestOutputHelper logger);
 
-    public virtual object? CustomData => null;
+    public virtual TState? CustomData => null;
 }

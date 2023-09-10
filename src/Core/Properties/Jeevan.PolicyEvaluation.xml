@@ -49,12 +49,44 @@
         <member name="M:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
             <inheritdoc />
         </member>
+        <member name="T:Jeevan.PolicyEvaluation.Expression`1">
+            <summary>
+                A special token that contains a sequence of other tokens, forming a full expression.
+                <br/>
+                The reason why this class derives from <see cref="T:Jeevan.PolicyEvaluation.Token"/> and is not outside the hierarchy
+                is because one of the tokens it can contain is a nested expression.
+            </summary>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.Expression`1.EvaluateToken(System.Int32,Jeevan.PolicyEvaluation.PolicyEvaluatorFunc{`0},`0)">
+            <summary>
+                Resolves the value of a policy, given its corresponding token. Only the following token
+                types are supported:
+                <br/>o <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/>: A policy that has not yet been evaluated.
+                <br/>o <see cref="T:Jeevan.PolicyEvaluation.Expression"/>: A nested expression.
+                <br/>o <see cref="T:Jeevan.PolicyEvaluation.ResultToken"/>: A policy whose result has already been evaluated.
+                <para/>
+                In case of a <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken" />, the method will look for other policy name
+                tokens with the same name in the expression and nested expressions and replace them with
+                the result of this policy evaluation. This way, the specific policy is only evaluated once.
+            </summary>
+            <param name="index">The index of the token in the <see cref="P:Jeevan.PolicyEvaluation.Expression`1.Tokens"/> collection.</param>
+            <param name="evaluator">The policy evaluation function.</param>
+            <param name="state">Optional custom state that can be passed into the evalator delegate.</param>
+            <returns>The result of the expression evaluation.</returns>
+            <exception cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.Expression`1.AssignOutcomeForPolicy(System.String,Jeevan.PolicyEvaluation.IPolicyOutcome,System.Int32)">
+            <summary>
+                For all <see cref="T:Jeevan.PolicyEvaluation.PolicyNameToken"/> tokens in this expression, replace with a <see cref="T:Jeevan.PolicyEvaluation.ResultToken"/>
+                containing the specified <paramref name="outcome"/>.
+            </summary>
+        </member>
         <member name="T:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome">
             <summary>
                 The outcome of the evaluation of a logical expression of policies.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator.EvaluateExpression(System.String,System.Object)">
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator.EvaluateExpression(System.String)">
             <summary>
                 Evaluates a logic policy expression and returns whether it succeeds or fails.
                 <br/>
@@ -62,10 +94,6 @@
                 then the expression will be considered to have passed.
             </summary>
             <param name="expression">The logical policy expression to evaluate.</param>
-            <param name="state">
-                Optional custom data that is passed to the policy evaluation delegate and can be used to
-                evaluate the policies.
-            </param>
             <returns>
                 An instance of <see cref="T:Jeevan.PolicyEvaluation.PassOutcome"/> if the expression evaluation is satisfied, otherwise
                 an <see cref="T:Jeevan.PolicyEvaluation.FailOutcome"/> instance.
@@ -126,6 +154,36 @@
             <summary>
                 Gets or sets a delegate to log diagnostic details of policy evaluation.
             </summary>
+        </member>
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator`1.EvaluateExpression(System.String,`0)">
+            <summary>
+                Evaluates a logic policy expression and returns whether it succeeds or fails.
+                <br/>
+                If the final policy outcome of the expression is <see cref="F:Jeevan.PolicyEvaluation.PolicyOutcome.NotApplicable"/>,
+                then the expression will be considered to have passed.
+            </summary>
+            <param name="expression">The logical policy expression to evaluate.</param>
+            <param name="state">
+                Optional custom data that is passed to the policy evaluation delegate and can be used to
+                evaluate the policies.
+            </param>
+            <returns>
+                An instance of <see cref="T:Jeevan.PolicyEvaluation.PassOutcome"/> if the expression evaluation is satisfied, otherwise
+                an <see cref="T:Jeevan.PolicyEvaluation.FailOutcome"/> instance.
+                <br/>
+                Use the <see cref="P:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome.IsSatisfied"/> property to check of the
+                result indicates a satisfied outcome.
+                <br/>
+                Alternatively, you can use the <see cref="M:Jeevan.PolicyEvaluation.IExpressionEvaluationOutcome.IsNotSatisfied(System.String@,System.String@)"/>
+                method to check if the expression was not satisfied and get the message related to the
+                failure.
+            </returns>
+            <exception cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException">
+                Thrown on any error during evaluation except for syntax errors.
+            </exception>
+            <exception cref="T:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException">
+                Thrown if the expression parsing results in a syntax error.
+            </exception>
         </member>
         <member name="F:Jeevan.PolicyEvaluation.PolicyOutcome.Pass">
             <summary>

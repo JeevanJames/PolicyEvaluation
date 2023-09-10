@@ -12,3 +12,6 @@
 /// </param>
 /// <returns>The outcome of the policy evaluation.</returns>
 public delegate IPolicyOutcome PolicyEvaluatorFunc(string policyName, object? state);
+
+public delegate IPolicyOutcome PolicyEvaluatorFunc<in TState>(string policyName, TState? state)
+    where TState : class;

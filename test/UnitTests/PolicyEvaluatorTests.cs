@@ -1,12 +1,13 @@
 ﻿namespace Jeevan.PolicyEvaluation.UnitTests;
 
-public abstract class PolicyEvaluatorTests
+public abstract class PolicyEvaluatorTests<TState>
+    where TState : class
 {
     private readonly ITestOutputHelper _output;
-    private readonly PolicyEvaluatorFixture _fixture;
-    private readonly PolicyEvaluator _evaluator;
+    private readonly PolicyEvaluatorFixture<TState> _fixture;
+    private readonly PolicyEvaluator<TState> _evaluator;
 
-    protected PolicyEvaluatorTests(ITestOutputHelper output, PolicyEvaluatorFixture fixture)
+    protected PolicyEvaluatorTests(ITestOutputHelper output, PolicyEvaluatorFixture<TState> fixture)
     {
         _output = output;
         _fixture = fixture;

@@ -1,6 +1,6 @@
 ﻿namespace Jeevan.PolicyEvaluation.UnitTests;
 
-public sealed class WithCustomDataTests : PolicyEvaluatorTests,
+public sealed class WithCustomDataTests : PolicyEvaluatorTests<PolicyEvaluatorHelper>,
     IClassFixture<WithCustomDataTests.WithCustomDataFixture>
 {
     public WithCustomDataTests(ITestOutputHelper output, WithCustomDataFixture fixture)
@@ -8,26 +8,27 @@ public sealed class WithCustomDataTests : PolicyEvaluatorTests,
     {
     }
 
-    public sealed class WithCustomDataFixture : PolicyEvaluatorFixture
+    public sealed class WithCustomDataFixture : PolicyEvaluatorFixture<PolicyEvaluatorHelper>
     {
         private readonly PolicyEvaluatorHelper _helper = new();
 
-        public override PolicyEvaluator CreateEvaluator(ITestOutputHelper logger)
+        public override PolicyEvaluator<PolicyEvaluatorHelper> CreateEvaluator(ITestOutputHelper logger)
         {
-            return new PolicyEvaluator(_helper.EvaluatePolicy, builder => builder
-                .LogWith(logger.WriteLine)
-                .CheckPolicyNameWith<PolicyEvaluatorHelper>(static (name, state) => state.IsValidPolicyName(name)));
+            return new PolicyEvaluator<PolicyEvaluatorHelper>((name, state) => state!.EvaluatePolicy(name),
+                builder => builder
+                    .LogWith(logger.WriteLine)
+                    .CheckPolicyNameWith<PolicyEvaluatorHelper>(static (name, state) => state.IsValidPolicyName(name)));
         }
 
-        public override object CustomData => _helper;
+        public override PolicyEvaluatorHelper? CustomData => _helper;
     }
 }
 
-internal sealed class PolicyEvaluatorHelper
+public sealed class PolicyEvaluatorHelper
 {
-    internal IPolicyOutcome EvaluatePolicy(string policyName) =>
+    public IPolicyOutcome EvaluatePolicy(string policyName) =>
         PolicyEvaluatorStaticHelper.EvaluatePolicy(policyName);
 
-    internal bool IsValidPolicyName(string policyName) =>
+    public bool IsValidPolicyName(string policyName) =>
         PolicyEvaluatorStaticHelper.IsValidPolicyName(policyName);
 }
