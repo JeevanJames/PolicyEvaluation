@@ -42,6 +42,9 @@ public class PolicyEvaluator<TState>
     ///     method to check if the expression was not satisfied and get the message related to the
     ///     failure.
     /// </returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown if <paramref name="expression"/> is <c>null</c>.
+    /// </exception>
     /// <exception cref="PolicyEvaluatorException">
     ///     Thrown on any error during evaluation except for syntax errors.
     /// </exception>
