@@ -178,6 +178,9 @@
                 method to check if the expression was not satisfied and get the message related to the
                 failure.
             </returns>
+            <exception cref="T:System.ArgumentNullException">
+                Thrown if <paramref name="expression"/> is <c>null</c>.
+            </exception>
             <exception cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException">
                 Thrown on any error during evaluation except for syntax errors.
             </exception>
