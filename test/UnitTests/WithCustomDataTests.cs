@@ -26,9 +26,11 @@ public sealed class WithCustomDataTests : PolicyEvaluatorTests<PolicyEvaluatorHe
 
 public sealed class PolicyEvaluatorHelper
 {
+#pragma warning disable S2325 // Methods and properties that don't access instance data should be static
     public IPolicyOutcome EvaluatePolicy(string policyName) =>
         PolicyEvaluatorStaticHelper.EvaluatePolicy(policyName);
 
     public bool IsValidPolicyName(string policyName) =>
         PolicyEvaluatorStaticHelper.IsValidPolicyName(policyName);
+#pragma warning restore S2325 // Methods and properties that don't access instance data should be static
 }
