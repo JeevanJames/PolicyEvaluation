@@ -50,10 +50,10 @@ jobs:
           fetch-depth: 0
       - name: "Publish NuGet package"
         run: |
-          $version = ${{github.ref_name}} -replace '^v' ''
-          echo "Build package with version $($version)..."
+          version="${GITHUB_REF_NAME#v}"
+          echo "Build package with version $version..."
           dotnet pack src/Core/Core.csproj -c Release --include-symbols --include-source -p Version=$version
           echo "Package created"
-          echo "Publishing package with version $($version)..."
-          dotnet nuget push src/Core/bin/Release/Jeevan.PolicyEvaluation.$version.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json
+          echo "Publishing package with version $version..."
+          dotnet nuget push "src/Core/bin/Release/Jeevan.PolicyEvaluation.$version.nupkg" -k "${{ secrets.NUGET_API_KEY }}" -s https://api.nuget.org/v3/index.json
           echo "Package published"
