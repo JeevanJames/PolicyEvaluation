@@ -12,7 +12,7 @@ PolicyEvaluator<MasterData> pe = new(EvaluatePolicy, builder => builder
     .CheckPolicyNameWith<MasterData>((name, md) => md.Policies.ContainsKey(name)));
 
 // The initial expression to evaluate.
-string? expression = "(BusinessHours OR YoungEnoughToWorkLate) AND JusticeLeagueMember";
+string? expression = "(Business.Hours OR YoungEnough_To_WorkLate) AND Justice-LeagueMember";
 
 string policies = string.Join(", ", masterData.Policies.Keys);
 

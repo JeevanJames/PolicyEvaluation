@@ -22,16 +22,16 @@ internal sealed class MasterData
 
     internal Dictionary<string, PolicyExecutorFunc> Policies { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["JusticeLeagueMember"] = c => (
+        ["Justice-LeagueMember"] = c => (
             c["email"].EndsWith("@justice-league.com", StringComparison.OrdinalIgnoreCase),
             "The user must have a valid Justice League email ID."),
         ["AvengersMember"] = c => (
             c["Email"].EndsWith("@avengers.com", StringComparison.OrdinalIgnoreCase),
             "The user must have a valid Avengers email ID."),
-        ["BusinessHours"] = _ => (
+        ["Business.Hours"] = _ => (
             DateTime.Now is { Hour: >= 8 and <= 18 },
             "Must be during business hours."),
-        ["YoungEnoughToWorkLate"] = c => (
+        ["YoungEnough_To_WorkLate"] = c => (
             int.Parse(c["age"]) <= 30,
             "User must be young enough to work outside office hours (30 years or less)."),
     };

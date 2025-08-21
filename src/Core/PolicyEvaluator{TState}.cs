@@ -216,7 +216,7 @@ public class PolicyEvaluator<TState>
         // Check the rest of the characters
         for (int i = 1; i < policyName.Length; i++)
         {
-            if (!char.IsLetterOrDigit(policyName[i]) && policyName[i] != '_')
+            if (!char.IsLetterOrDigit(policyName[i]) && policyName[i] is not '_' and not '-' and not '.')
                 return false;
         }
 
