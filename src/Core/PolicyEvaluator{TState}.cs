@@ -51,7 +51,7 @@ public class PolicyEvaluator<TState>
     /// <exception cref="ExpressionSyntaxErrorException">
     ///     Thrown if the expression parsing results in a syntax error.
     /// </exception>
-    public IExpressionEvaluationOutcome EvaluateExpression(string expression, TState? state = null)
+    public async ValueTask<IExpressionEvaluationOutcome> EvaluateExpressionAsync(string expression, TState? state = null)
     {
         ArgumentNullException.ThrowIfNull(expression);
 
@@ -69,7 +69,7 @@ public class PolicyEvaluator<TState>
 
         // Evaluate the outer-most expression and return the result.
         // As part this call, inner expressions and policy tokens are also evaluated.
-        IPolicyOutcome finalOutcome = expr.Evaluate(_evaluator, state);
+        IPolicyOutcome finalOutcome = await expr.Evaluate(_evaluator, state);
 
         return finalOutcome switch
         {

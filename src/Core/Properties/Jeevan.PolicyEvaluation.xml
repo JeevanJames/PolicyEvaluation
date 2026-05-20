@@ -46,9 +46,6 @@
                 Gets the index of the syntax error in the expression.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.ExpressionSyntaxErrorException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <inheritdoc />
-        </member>
         <member name="T:Jeevan.PolicyEvaluation.Expression`1">
             <summary>
                 A special token that contains a sequence of other tokens, forming a full expression.
@@ -86,7 +83,7 @@
                 The outcome of the evaluation of a logical expression of policies.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator.EvaluateExpression(System.String)">
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator.EvaluateExpressionAsync(System.String)">
             <summary>
                 Evaluates a logic policy expression and returns whether it succeeds or fails.
                 <br/>
@@ -119,18 +116,6 @@
             </summary>
             <param name="message">The message that describes the error.</param>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluatorException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-                Initializes a new instance of the <see cref="T:Jeevan.PolicyEvaluation.PolicyEvaluatorException" /> class with serialized
-                data.
-            </summary>
-            <param name="info">
-                The SerializationInfo that holds the serialized object data about the exception being thrown.
-            </param>
-            <param name="context">
-                The StreamingContext that contains contextual information about the source or destination.
-            </param>
-        </member>
         <member name="T:Jeevan.PolicyEvaluation.PolicyEvaluatorFunc">
             <summary>
                 Delegate to evaluate policies.
@@ -155,7 +140,7 @@
                 Gets or sets a delegate to log diagnostic details of policy evaluation.
             </summary>
         </member>
-        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator`1.EvaluateExpression(System.String,`0)">
+        <member name="M:Jeevan.PolicyEvaluation.PolicyEvaluator`1.EvaluateExpressionAsync(System.String,`0)">
             <summary>
                 Evaluates a logic policy expression and returns whether it succeeds or fails.
                 <br/>

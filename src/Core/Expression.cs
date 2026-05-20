@@ -20,17 +20,17 @@ internal sealed record Expression : Token
 
     internal IList<Token> Tokens { get; }
 
-    internal IPolicyOutcome Evaluate(PolicyEvaluatorFunc evaluator, object? state)
+    internal async ValueTask<IPolicyOutcome> Evaluate(PolicyEvaluatorFunc evaluator, object? state)
     {
 #pragma warning disable SA1011 // Closing square brackets should be spaced correctly
         // Special case: If there is only a single token, evaluate that token directly.
         switch (Tokens)
         {
             case [PolicyNameToken pnToken]:
-                return evaluator(pnToken.Name, state);
+                return await evaluator(pnToken.Name, state);
 
             case [Expression expr]:
-                return expr.Evaluate(evaluator, state);
+                return await expr.Evaluate(evaluator, state);
         }
 #pragma warning restore SA1011 // Closing square brackets should be spaced correctly
 
@@ -45,8 +45,8 @@ internal sealed record Expression : Token
             if (Tokens[index] is not AndToken)
                 continue;
 
-            IPolicyOutcome firstTokenOutcome = EvaluateToken(index - 1, evaluator, state);
-            IPolicyOutcome secondTokenOutcome = EvaluateToken(index + 1, evaluator, state);
+            IPolicyOutcome firstTokenOutcome = await EvaluateToken(index - 1, evaluator, state);
+            IPolicyOutcome secondTokenOutcome = await EvaluateToken(index + 1, evaluator, state);
             IPolicyOutcome outcome = EvaluateLogicalCondition(firstTokenOutcome, secondTokenOutcome,
                 isAndCondition: true);
 
@@ -65,8 +65,8 @@ internal sealed record Expression : Token
             if (Tokens[index] is not OrToken)
                 continue;
 
-            IPolicyOutcome firstTokenResult = EvaluateToken(index - 1, evaluator, state);
-            IPolicyOutcome secondTokenResult = EvaluateToken(index + 1, evaluator, state);
+            IPolicyOutcome firstTokenResult = await EvaluateToken(index - 1, evaluator, state);
+            IPolicyOutcome secondTokenResult = await EvaluateToken(index + 1, evaluator, state);
             IPolicyOutcome result = EvaluateLogicalCondition(firstTokenResult, secondTokenResult,
                 isAndCondition: false);
 
@@ -108,12 +108,12 @@ internal sealed record Expression : Token
     /// <param name="state">Optional custom state that can be passed into the evalator delegate.</param>
     /// <returns>The result of the expression evaluation.</returns>
     /// <exception cref="PolicyEvaluatorException">Thrown if an unexpected token is encountered.</exception>
-    private IPolicyOutcome EvaluateToken(int index, PolicyEvaluatorFunc evaluator, object? state)
+    private async ValueTask<IPolicyOutcome> EvaluateToken(int index, PolicyEvaluatorFunc evaluator, object? state)
     {
         switch (Tokens[index])
         {
             case Expression e:
-                return e.Evaluate(evaluator, state);
+                return await e.Evaluate(evaluator, state);
 
             case ResultToken r:
                 return r.Outcome;
@@ -124,7 +124,7 @@ internal sealed record Expression : Token
                 // and ErrorOutcome and ensure that we only return PassOutcome, FailOutcome or NotApplicableOutcome.
                 try
                 {
-                    IPolicyOutcome outcome = evaluator(p.Name, state);
+                    IPolicyOutcome outcome = await evaluator(p.Name, state);
                     switch (outcome)
                     {
                         case InvalidPolicyNameOutcome:

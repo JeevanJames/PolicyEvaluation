@@ -17,7 +17,7 @@ public sealed class WithoutCustomDataTests : PolicyEvaluatorTests<object>,
                 .CheckPolicyNameWith(PolicyEvaluatorStaticHelper.IsValidPolicyName));
         }
 
-        private static IPolicyOutcome TestPolicyEvaluator(string policyName) =>
-            PolicyEvaluatorStaticHelper.EvaluatePolicy(policyName);
+        private static ValueTask<IPolicyOutcome> TestPolicyEvaluator(string policyName) =>
+            ValueTask.FromResult(PolicyEvaluatorStaticHelper.EvaluatePolicy(policyName));
     }
 }

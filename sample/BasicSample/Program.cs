@@ -23,7 +23,7 @@ while (!string.IsNullOrEmpty(expression))
 
     try
     {
-        IExpressionEvaluationOutcome outcome = pe.EvaluateExpression(expression, masterData);
+        IExpressionEvaluationOutcome outcome = await pe.EvaluateExpressionAsync(expression, masterData);
 
         if (outcome.IsNotSatisfied(out string? policyName, out string? failureMessage))
         {
@@ -54,13 +54,13 @@ while (!string.IsNullOrEmpty(expression))
     expression = ReadLine();
 }
 
-static IPolicyOutcome EvaluatePolicy(string policyName, MasterData? md)
+static ValueTask<IPolicyOutcome> EvaluatePolicy(string policyName, MasterData? md)
 {
     ArgumentNullException.ThrowIfNull(md);
 
     if (!md.Policies.TryGetValue(policyName, out PolicyExecutorFunc? policy))
-        return PolicyOutcome.InvalidPolicyName(policyName);
+        return ValueTask.FromResult(PolicyOutcome.InvalidPolicyName(policyName));
 
     (bool result, string message) = policy(md.IronMan);
-    return result ? PolicyOutcome.Pass : PolicyOutcome.Fail(policyName, message);
+    return ValueTask.FromResult(result ? PolicyOutcome.Pass : PolicyOutcome.Fail(policyName, message));
 }

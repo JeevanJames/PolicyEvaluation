@@ -14,7 +14,7 @@ public sealed class WithCustomDataTests : PolicyEvaluatorTests<PolicyEvaluatorHe
 
         public override PolicyEvaluator<PolicyEvaluatorHelper> CreateEvaluator(ITestOutputHelper logger)
         {
-            return new PolicyEvaluator<PolicyEvaluatorHelper>((name, state) => state!.EvaluatePolicy(name),
+            return new PolicyEvaluator<PolicyEvaluatorHelper>((name, state) => ValueTask.FromResult(state!.EvaluatePolicy(name)),
                 builder => builder
                     .LogWith(logger.WriteLine)
                     .CheckPolicyNameWith<PolicyEvaluatorHelper>(static (name, state) => state.IsValidPolicyName(name)));

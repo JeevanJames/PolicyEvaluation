@@ -2,7 +2,7 @@
 
 public sealed class PolicyEvaluator : PolicyEvaluator<object>
 {
-    public PolicyEvaluator(Func<string, IPolicyOutcome> evaluator,
+    public PolicyEvaluator(Func<string, ValueTask<IPolicyOutcome>> evaluator,
         Action<PolicyEvaluatorOptionsBuilder>? optionsBuilder = null)
         : base((expr, _) => evaluator(expr), optionsBuilder)
     {
@@ -32,8 +32,8 @@ public sealed class PolicyEvaluator : PolicyEvaluator<object>
     /// <exception cref="ExpressionSyntaxErrorException">
     ///     Thrown if the expression parsing results in a syntax error.
     /// </exception>
-    public IExpressionEvaluationOutcome EvaluateExpression(string expression)
+    public async ValueTask<IExpressionEvaluationOutcome> EvaluateExpressionAsync(string expression)
     {
-        return base.EvaluateExpression(expression);
+        return await base.EvaluateExpressionAsync(expression);
     }
 }

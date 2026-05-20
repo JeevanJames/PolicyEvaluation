@@ -1,23 +1,16 @@
 ﻿namespace Jeevan.PolicyEvaluation.UnitTests;
 
-public abstract class PolicyEvaluatorTests<TState>
+public abstract class PolicyEvaluatorTests<TState>(ITestOutputHelper output, PolicyEvaluatorFixture<TState> fixture)
     where TState : class
 {
-    private readonly ITestOutputHelper _output;
-    private readonly PolicyEvaluatorFixture<TState> _fixture;
-    private readonly PolicyEvaluator<TState> _evaluator;
-
-    protected PolicyEvaluatorTests(ITestOutputHelper output, PolicyEvaluatorFixture<TState> fixture)
-    {
-        _output = output;
-        _fixture = fixture;
-        _evaluator = fixture.CreateEvaluator(output);
-    }
+    private readonly ITestOutputHelper _output = output;
+    private readonly PolicyEvaluatorFixture<TState> _fixture = fixture;
+    private readonly PolicyEvaluator<TState> _evaluator = fixture.CreateEvaluator(output);
 
     [Fact]
-    public void NullExpressionTest()
+    public async Task NullExpressionTest()
     {
-        Should.Throw<ArgumentNullException>(() => _evaluator.EvaluateExpression(null!, _fixture.CustomData));
+        await Should.ThrowAsync<ArgumentNullException>(async () => await _evaluator.EvaluateExpressionAsync(null!, _fixture.CustomData));
     }
 
     [Theory]
@@ -27,10 +20,10 @@ public abstract class PolicyEvaluatorTests<TState>
     [InlineData("(False1)", false)]
     [InlineData("NA1", true)]
     [InlineData("(NA1)", true)]
-    public void SimpleExpressionTests(string expression, bool expectedResult)
+    public async Task SimpleExpressionTests(string expression, bool expectedResult)
     {
         _output.WriteLine(expression);
-        IExpressionEvaluationOutcome outcome = _evaluator.EvaluateExpression(expression, _fixture.CustomData);
+        IExpressionEvaluationOutcome outcome = await _evaluator.EvaluateExpressionAsync(expression, _fixture.CustomData);
         outcome.ShouldBe(expectedResult);
     }
 
@@ -77,10 +70,10 @@ public abstract class PolicyEvaluatorTests<TState>
     [InlineData(40, "NA1 OR NA2 OR NA3", true)]
     [InlineData(41, "NA1 AND NA2 OR NA3", true)]
     [InlineData(42, "NA1 OR NA2 AND NA3", true)]
-    public void ComplexExpressionTests(int index, string expression, bool expectedResult)
+    public async Task ComplexExpressionTests(int index, string expression, bool expectedResult)
     {
         _output.WriteLine($"{index}: {expression}");
-        IExpressionEvaluationOutcome outcome = _evaluator.EvaluateExpression(expression, _fixture.CustomData);
+        IExpressionEvaluationOutcome outcome = await _evaluator.EvaluateExpressionAsync(expression, _fixture.CustomData);
         outcome.ShouldBe(expectedResult);
     }
 
@@ -115,12 +108,12 @@ public abstract class PolicyEvaluatorTests<TState>
     [InlineData(28, "    ", 0)]
     [InlineData(29, "True1 AND False34", 10)]
     [InlineData(30, "False2 OR True35", 10)]
-    public void ExpressionSyntaxErrorExceptionTests(int index, string expression, int expectedPosition)
+    public async Task ExpressionSyntaxErrorExceptionTests(int index, string expression, int expectedPosition)
     {
         _output.WriteLine($"{index}: {expression}");
 
-        ExpressionSyntaxErrorException exception = Should.Throw<ExpressionSyntaxErrorException>(
-            () => _evaluator.EvaluateExpression(expression, _fixture.CustomData));
+        ExpressionSyntaxErrorException exception = await Should.ThrowAsync<ExpressionSyntaxErrorException>(
+            async () => await _evaluator.EvaluateExpressionAsync(expression, _fixture.CustomData));
 
         exception.Position.ShouldBeGreaterThanOrEqualTo(0);
 
@@ -133,11 +126,11 @@ public abstract class PolicyEvaluatorTests<TState>
 
     [Theory]
     [InlineData("InvalidPolicyName1")]
-    public void PolicyEvaluatorExceptionTests(string expression)
+    public async Task PolicyEvaluatorExceptionTests(string expression)
     {
         _output.WriteLine(expression);
-        PolicyEvaluatorException exception = Should.Throw<PolicyEvaluatorException>(
-            () => _evaluator.EvaluateExpression(expression, _fixture.CustomData));
+        PolicyEvaluatorException exception = await Should.ThrowAsync<PolicyEvaluatorException>(
+            async () => await _evaluator.EvaluateExpressionAsync(expression, _fixture.CustomData));
         exception.ShouldBeOfType<PolicyEvaluatorException>();
 
         _output.WriteLine(exception.Message);

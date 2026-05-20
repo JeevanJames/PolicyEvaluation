@@ -11,7 +11,7 @@
 ///     the delegate's scope, we can prevent unnecessary closures.
 /// </param>
 /// <returns>The outcome of the policy evaluation.</returns>
-public delegate IPolicyOutcome PolicyEvaluatorFunc(string policyName, object? state);
+public delegate ValueTask<IPolicyOutcome> PolicyEvaluatorFunc(string policyName, object? state);
 
-public delegate IPolicyOutcome PolicyEvaluatorFunc<in TState>(string policyName, TState? state)
+public delegate ValueTask<IPolicyOutcome> PolicyEvaluatorFunc<in TState>(string policyName, TState? state)
     where TState : class;
